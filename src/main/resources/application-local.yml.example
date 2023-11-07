@@ -1,0 +1,14 @@
+spring:
+  security:
+    oauth2:
+      client:
+        provider:
+          su:
+            authorization-uri: https://toker-test.dsv.su.se/authorize
+            token-uri: https://toker-test.dsv.su.se/exchange
+            user-info-uri: https://toker-test.dsv.su.se/verify
+            user-name-attribute: sub
+        registration:
+          su:
+            client-id:
+            client-secret:
