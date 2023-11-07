@@ -1,4 +1,4 @@
-package se.su.dsv.springbootviteauth.web;
+package se.su.dsv.proctoring.web;
 
 import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

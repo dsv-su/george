@@ -1,6 +1,12 @@
-# Skeleton for Spring Boot backend with a React frontend using Vite
-* Configured with OAuth2 login
-* Packages everything as a bundled up WAR
+# Live proctoring
+Both test takers and proctors connect to the system. The test takers camera
+and monitor is shared with the proctor. Proctors have the ability to talk to the
+test takers, but they must initiate the communication.
+
+## Technology
+It uses the [Media Capture and Streams API](https://developer.mozilla.org/en-US/docs/Web/API/Media_Capture_and_Streams_API)
+to capture the camera and monitor and communicates using [WebRTC](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API).
+Orchestrating the live communication is done via [WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API).
 
 ## Development
 Requires Java 21.
@@ -9,5 +15,5 @@ Copy `src/main/resources/application-local.yml.example` to `application-local.ym
 
 Run backend with `mvnw spring-boot:run` and frontend with `cd frontend && npm run dev`.
 
-To login you first have to browse to `http://localhost:8080` and authenticate
+To login, you first have to browse to `http://localhost:8080` and authenticate
 to initialise the Spring session, after you can go access the frontend at `http://localhost:5173`.

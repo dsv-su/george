@@ -1,4 +1,4 @@
-package se.su.dsv.springbootviteauth;
+package se.su.dsv.proctoring;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,10 +8,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
 @SpringBootApplication
-public class SpringBootViteAuthApplication {
+public class SpringBootProctoringApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SpringBootViteAuthApplication.class, args);
+        SpringApplication.run(SpringBootProctoringApplication.class, args);
     }
 
     /**

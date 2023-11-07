@@ -1,4 +1,4 @@
-package se.su.dsv.springbootviteauth;
+package se.su.dsv.proctoring;
 
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
@@ -6,6 +6,6 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 public class ServletInitializer extends SpringBootServletInitializer {
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-        return application.sources(SpringBootViteAuthApplication.class);
+        return application.sources(SpringBootProctoringApplication.class);
     }
 }

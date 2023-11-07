@@ -1,4 +1,4 @@
-package se.su.dsv.springbootviteauth;
+package se.su.dsv.proctoring;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,7 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
                 "spring.security.oauth2.client.registration.su.client-secret=client-secret",
         }
 )
-class SpringBootViteAuthApplicationTests {
+class SpringBootProctoringApplicationTests {
 
     @Test
     void contextLoads() {
