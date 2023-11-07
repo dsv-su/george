@@ -5,4 +5,5 @@ import java.util.List;
 
 public interface ProctoringService {
     List<Exam> examsToProctor(Principal principal);
+    boolean canProctor(ExamId examId, Principal principal);
 }

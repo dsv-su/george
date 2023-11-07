@@ -6,10 +6,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.socket.config.annotation.EnableWebSocket;
+import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 import se.su.dsv.proctoring.prototype.FakeData;
 import se.su.dsv.proctoring.services.ProctoringService;
+import se.su.dsv.proctoring.web.proctor.ProctorWebSocketHandler;
 
 @SpringBootApplication
+@EnableWebSocket
 public class SpringBootProctoringApplication {
 
     public static void main(String[] args) {
@@ -37,5 +42,10 @@ public class SpringBootProctoringApplication {
     @Bean
     public ProctoringService proctoringService() {
         return new FakeData();
+    }
+
+    @Bean
+    public WebSocketConfigurer proctorWS(ProctoringService proctoringService) {
+        return registry -> registry.addHandler(new ProctorWebSocketHandler(proctoringService), "/ws/proctor");
     }
 }

@@ -1,40 +1,16 @@
-import { useEffect, useState } from 'react';
 import './App.css';
-import Api from './api';
-import { useFetch } from './fetch.ts';
-import { Exam } from './proctor.ts';
-import { Fetch } from './fetch-dom.ts';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import Index from './Index.tsx';
+import Proctor from './Proctor.tsx';
 
 function App() {
-  const [principal, setPrincipal] = useState<string>();
-
-  useEffect(() => {
-    async function doFetch() {
-      const response = await fetch(Api.profile);
-      const text = await response.text();
-      setPrincipal(text);
-    }
-    void doFetch();
-  }, []);
-
-  const examsToProctor = useFetch<Exam[]>(Api.listMyExamsToProctor);
-
   return (
-    <>
-      <p>Welcome {principal}</p>
-      <Fetch
-        response={examsToProctor}
-        render={(exams) => {
-          return (
-            <ul>
-              {exams.map((exam) => {
-                return <li key={exam.id}>{exam.title}</li>;
-              })}
-            </ul>
-          );
-        }}
-      />
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route index={true} element={<Index />} />
+        <Route path={'/proctor/:examId'} element={<Proctor />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

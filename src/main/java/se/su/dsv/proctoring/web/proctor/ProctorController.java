@@ -33,6 +33,6 @@ public class ProctorController {
         LocalTime end = exam.start().plus(exam.length()).toLocalTime();
         LocalDate date = exam.start().toLocalDate();
         String title = "%s %s %s (%s-%s)".formatted("", date, exam.title(), start, end);
-        return new Exam(exam.id(), title);
+        return new Exam(exam.id().asString(), title);
     }
 }

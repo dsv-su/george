@@ -1,6 +1,7 @@
 package se.su.dsv.proctoring.prototype;
 
 import se.su.dsv.proctoring.services.Exam;
+import se.su.dsv.proctoring.services.ExamId;
 import se.su.dsv.proctoring.services.ProctoringService;
 
 import java.security.Principal;
@@ -18,15 +19,20 @@ public class FakeData implements ProctoringService {
     public List<Exam> examsToProctor(final Principal principal) {
         return List.of(
                 new Exam(
-                        "123-abc-456-def",
+                        new ExamId("123-abc-456-def"),
                         "Take home exam",
                         ZonedDateTime.of(LocalDateTime.of(2023, Month.SEPTEMBER, 29, 14, 0), DSV_TIMEZONE),
                         Duration.ofHours(4)),
                 new Exam(
-                        "123-abc-456-def",
+                        new ExamId("789-aoeu-123"),
                         "Take home re-exam",
                         ZonedDateTime.of(LocalDateTime.of(2023, Month.NOVEMBER, 11, 10, 0), DSV_TIMEZONE),
                         Duration.ofHours(4))
         );
+    }
+
+    @Override
+    public boolean canProctor(final ExamId examId, final Principal principal) {
+        return true;
     }
 }

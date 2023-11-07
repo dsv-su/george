@@ -15,9 +15,7 @@ public class SinglePageApplicationController {
      * @return always serve {@code /}
      */
     @RequestMapping({
-            "/{path:[^.]*}",
-            "/{path:[^.]*}/{path2:[^.]*}",
-            "/{path:[^.]*}/{path2:[^.]*}/{*rest}"
+            "/proctor/:examId"
     })
     public String serveIndexHtml() {
         return "forward:/";
