@@ -3,4 +3,5 @@ const baseUrl = `${contextPath}/api`;
 
 export default {
   profile: `${baseUrl}/profile`,
+  listMyExamsToProctor: `${baseUrl}/proctor/list`,
 };

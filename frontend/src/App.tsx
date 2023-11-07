@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import './App.css';
 import Api from './api';
+import { useFetch } from './fetch.ts';
+import { Exam } from './proctor.ts';
+import { Fetch } from './fetch-dom.ts';
 
 function App() {
   const [principal, setPrincipal] = useState<string>();
@@ -14,9 +17,23 @@ function App() {
     void doFetch();
   }, []);
 
+  const examsToProctor = useFetch<Exam[]>(Api.listMyExamsToProctor);
+
   return (
     <>
       <p>Welcome {principal}</p>
+      <Fetch
+        response={examsToProctor}
+        render={(exams) => {
+          return (
+            <ul>
+              {exams.map((exam) => {
+                return <li key={exam.id}>{exam.title}</li>;
+              })}
+            </ul>
+          );
+        }}
+      />
     </>
   );
 }

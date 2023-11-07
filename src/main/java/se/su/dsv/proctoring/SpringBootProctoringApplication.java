@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import se.su.dsv.proctoring.prototype.FakeData;
+import se.su.dsv.proctoring.services.ProctoringService;
 
 @SpringBootApplication
 public class SpringBootProctoringApplication {
@@ -30,5 +32,10 @@ public class SpringBootProctoringApplication {
         http.authorizeHttpRequests(authorization -> authorization
                 .anyRequest().authenticated());
         return http.build();
+    }
+
+    @Bean
+    public ProctoringService proctoringService() {
+        return new FakeData();
     }
 }
