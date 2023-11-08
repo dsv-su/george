@@ -16,4 +16,11 @@ public interface ProctoringService {
         }
         return Optional.empty();
     }
+
+    /**
+     * @param exam exam to proctor
+     * @param principal the proctor
+     * @return the candidates the given principal should proctor on the given exam.
+     */
+    List<Candidate> getCandidates(Exam exam, Principal principal);
 }

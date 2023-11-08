@@ -2,12 +2,18 @@ import { useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useEffect, useState } from 'react';
 
-type ExaminationInfo = {
-  type: 'exam_info';
-  title: string;
-};
+type Message =
+  | {
+      type: 'exam_info';
+      title: string;
+    }
+  | {
+      type: 'candidate';
+      principal_name: string;
+    };
 
-type Message = ExaminationInfo;
+type ExaminationInfo = string;
+type Candidate = string;
 
 const Proctor = () => {
   const { examId } = useParams();
@@ -19,14 +25,20 @@ const Proctor = () => {
       onMessage(message);
     },
   });
-  const [examInfo, setExamInfo] = useState<string>();
+  const [examInfo, setExamInfo] = useState<ExaminationInfo>();
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
 
   const onMessage = (event: MessageEvent<any>) => {
     try {
       const message: Message = JSON.parse(event.data);
+      console.log(message);
       switch (message.type) {
         case 'exam_info':
           setExamInfo(message.title);
+          break;
+        case 'candidate':
+          setCandidates((existing) => [...existing, message.principal_name]);
+          break;
       }
     } catch (e) {
       console.error(e);
@@ -47,6 +59,11 @@ const Proctor = () => {
       {examId} ({examInfo})
       <br />
       {readyState}
+      <ul>
+        {candidates.map((candidate) => (
+          <li key={candidate}>{candidate}</li>
+        ))}
+      </ul>
     </>
   );
 };

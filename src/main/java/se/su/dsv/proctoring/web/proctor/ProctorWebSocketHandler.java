@@ -7,11 +7,13 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+import se.su.dsv.proctoring.services.Candidate;
 import se.su.dsv.proctoring.services.Exam;
 import se.su.dsv.proctoring.services.ExamId;
 import se.su.dsv.proctoring.services.ProctoringService;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 public class ProctorWebSocketHandler extends TextWebSocketHandler {
@@ -55,12 +57,24 @@ public class ProctorWebSocketHandler extends TextWebSocketHandler {
                 Optional<Exam> maybeExam = proctoringService.getProctorableExam(new ExamId(examId), session.getPrincipal());
                 if (maybeExam.isPresent()) {
                     Message message = new Message.ExamInfo(maybeExam.get().title());
-                    session.sendMessage(new TextMessage(objectMapper.writeValueAsString(message)));
+                    sendJsonMessage(session, message);
+                    List<Candidate> candidates = proctoringService.getCandidates(
+                            maybeExam.get(),
+                            session.getPrincipal());
+                    for (Candidate candidate : candidates) {
+                        sendJsonMessage(session, new Message.Candidate(candidate.username().principalName()));
+                    }
                 }
                 else {
                     session.sendMessage(ACCESS_DENIED);
                 }
             }
         }
+    }
+
+    private void sendJsonMessage(WebSocketSession session, Message message)
+            throws IOException
+    {
+        session.sendMessage(new TextMessage(objectMapper.writeValueAsString(message)));
     }
 }
