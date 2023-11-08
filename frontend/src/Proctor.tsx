@@ -1,6 +1,13 @@
 import { useParams } from 'react-router-dom';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+type ExaminationInfo = {
+  type: 'exam_info';
+  title: string;
+};
+
+type Message = ExaminationInfo;
 
 const Proctor = () => {
   const { examId } = useParams();
@@ -8,20 +15,36 @@ const Proctor = () => {
   const { readyState, sendJsonMessage } = useWebSocket(`${origin}/ws/proctor`, {
     onReconnectStop: (_) => false,
     shouldReconnect: (_) => true,
+    onMessage: (message) => {
+      onMessage(message);
+    },
   });
+  const [examInfo, setExamInfo] = useState<string>();
+
+  const onMessage = (event: MessageEvent<any>) => {
+    try {
+      const message: Message = JSON.parse(event.data);
+      switch (message.type) {
+        case 'exam_info':
+          setExamInfo(message.title);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   useEffect(() => {
     if (readyState == ReadyState.OPEN) {
       sendJsonMessage({
-        type: 'proctor',
-        'exam-id': examId,
+        type: 'proctor_examination',
+        exam_id: examId,
       });
     }
   }, [readyState, sendJsonMessage]);
 
   return (
     <>
-      {examId}
+      {examId} ({examInfo})
       <br />
       {readyState}
     </>

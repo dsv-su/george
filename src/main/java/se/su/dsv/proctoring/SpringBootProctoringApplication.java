@@ -1,5 +1,6 @@
 package se.su.dsv.proctoring;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -8,7 +9,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
-import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 import se.su.dsv.proctoring.prototype.FakeData;
 import se.su.dsv.proctoring.services.ProctoringService;
 import se.su.dsv.proctoring.web.proctor.ProctorWebSocketHandler;
@@ -45,7 +45,15 @@ public class SpringBootProctoringApplication {
     }
 
     @Bean
-    public WebSocketConfigurer proctorWS(ProctoringService proctoringService) {
-        return registry -> registry.addHandler(new ProctorWebSocketHandler(proctoringService), "/ws/proctor");
+    public ProctorWebSocketHandler proctorWebSocketHandler(
+            ProctoringService proctoringService,
+            ObjectMapper objectMapper)
+    {
+        return new ProctorWebSocketHandler(proctoringService, objectMapper);
+    }
+
+    @Bean
+    public WebSocketConfigurer proctorWS(ProctorWebSocketHandler proctorWebSocketHandler) {
+        return registry -> registry.addHandler(proctorWebSocketHandler, "/ws/proctor");
     }
 }

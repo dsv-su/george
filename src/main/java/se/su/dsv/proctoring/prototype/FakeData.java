@@ -30,9 +30,4 @@ public class FakeData implements ProctoringService {
                         Duration.ofHours(4))
         );
     }
-
-    @Override
-    public boolean canProctor(final ExamId examId, final Principal principal) {
-        return true;
-    }
 }
