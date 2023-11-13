@@ -63,6 +63,9 @@ public class ProctorWebSocketHandler extends TextWebSocketHandler {
                             session.getPrincipal());
                     for (Candidate candidate : candidates) {
                         sendJsonMessage(session, new Message.Candidate(candidate.username().principalName()));
+                        sendJsonMessage(session, new Message.CandidateRTCOffer(
+                                candidate.username().principalName(),
+                                new Message.RTCSessionDescription("offer", "sdp")));
                     }
                 }
                 else {
