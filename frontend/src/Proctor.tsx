@@ -24,23 +24,24 @@ type Principal = string;
 
 class SignallingServer {
   private offerCallbacks: Record<Principal, (offer: RTCSessionDescriptionInit) => Promise<RTCSessionDescriptionInit>> = {};
-  private awaitingOffers: Record<Principal, RTCSessionDescriptionInit> = {};
+  private awaitingOffers: Record<Principal, { offer: RTCSessionDescriptionInit; resolve: (offer: RTCSessionDescriptionInit) => void }> = {};
 
   public registerCallback(principal: Principal, callback: (offer: RTCSessionDescriptionInit) => Promise<RTCSessionDescriptionInit>) {
     this.offerCallbacks[principal] = callback;
     const awaitingOffer = this.awaitingOffers[principal];
     if (awaitingOffer !== undefined) {
       delete this.awaitingOffers[principal];
-      void callback(awaitingOffer);
+      callback(awaitingOffer.offer).then((answer) => awaitingOffer.resolve(answer));
     }
   }
 
-  public async handleOffer(principal: Principal, offer: RTCSessionDescriptionInit) {
+  public async handleOffer(principal: Principal, offer: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
     if (this.offerCallbacks[principal] === undefined) {
-      this.awaitingOffers[principal] = offer;
-      return;
+      return new Promise((resolve) => {
+        this.awaitingOffers[principal] = { offer, resolve };
+      });
     }
-    await this.offerCallbacks[principal](offer);
+    return await this.offerCallbacks[principal](offer);
   }
 }
 
@@ -70,7 +71,10 @@ const Proctor = () => {
           setCandidates((existing) => [...existing, message.principal_name]);
           break;
         case 'candidate_rtc_offer':
-          void signallingServer.current.handleOffer(message.principal_name, message.offer);
+          const answer = signallingServer.current.handleOffer(message.principal_name, message.offer);
+          answer.then((answer) => {
+            console.log('answer to candidate offer', answer);
+          });
       }
     } catch (e) {
       console.error(e);

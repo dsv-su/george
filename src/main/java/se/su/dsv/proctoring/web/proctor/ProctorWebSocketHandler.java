@@ -13,8 +13,12 @@ import se.su.dsv.proctoring.services.ExamId;
 import se.su.dsv.proctoring.services.ProctoringService;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class ProctorWebSocketHandler extends TextWebSocketHandler {
     private static final WebSocketMessage<?> ACCESS_DENIED = new TextMessage("{\"type\":\"access_denied\"}");
@@ -22,6 +26,8 @@ public class ProctorWebSocketHandler extends TextWebSocketHandler {
 
     private final ProctoringService proctoringService;
     private final ObjectMapper objectMapper;
+
+    private Map<ExamId, Collection<WebSocketSession>> proctors = new ConcurrentHashMap<>();
 
     public ProctorWebSocketHandler(final ProctoringService proctoringService, ObjectMapper objectMapper) {
         this.proctoringService = proctoringService;
@@ -37,23 +43,30 @@ public class ProctorWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+        for (Collection<WebSocketSession> proctors : proctors.values()) {
+            proctors.remove(session);
+        }
+    }
+
+    @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage textMessage)
             throws IOException
     {
         String payload = textMessage.getPayload();
         try {
-            ProctorMessage proctorMessage = objectMapper.readValue(payload, ProctorMessage.class);
-            handleProctor(session, proctorMessage);
+            InboundMessage inboundMessage = objectMapper.readValue(payload, InboundMessage.class);
+            handleInboundMessage(session, inboundMessage);
         } catch (JsonProcessingException e) {
             session.sendMessage(INVALID_MESSAGE);
         }
     }
 
-    private void handleProctor(WebSocketSession session, ProctorMessage proctorMessage)
+    private void handleInboundMessage(WebSocketSession session, InboundMessage inboundMessage)
             throws IOException
     {
-        switch (proctorMessage) {
-            case ProctorMessage.ProctorExamination(String examId) -> {
+        switch (inboundMessage) {
+            case InboundMessage.ProctorExamination(String examId) -> {
                 Optional<Exam> maybeExam = proctoringService.getProctorableExam(new ExamId(examId), session.getPrincipal());
                 if (maybeExam.isPresent()) {
                     Message message = new Message.ExamInfo(maybeExam.get().title());
@@ -63,13 +76,19 @@ public class ProctorWebSocketHandler extends TextWebSocketHandler {
                             session.getPrincipal());
                     for (Candidate candidate : candidates) {
                         sendJsonMessage(session, new Message.Candidate(candidate.username().principalName()));
-                        sendJsonMessage(session, new Message.CandidateRTCOffer(
-                                candidate.username().principalName(),
-                                new Message.RTCSessionDescription("offer", "sdp")));
                     }
+                    proctors.putIfAbsent(new ExamId(examId), new ConcurrentLinkedQueue<>());
+                    proctors.get(new ExamId(examId)).add(session);
                 }
                 else {
                     session.sendMessage(ACCESS_DENIED);
+                }
+            }
+            case InboundMessage.CandidateJoined(String examId, RTCSessionDescription offer) -> {
+                Collection<WebSocketSession> proctors = this.proctors.getOrDefault(new ExamId(examId), List.of());
+                // TODO: get only the correct proctor
+                for (WebSocketSession proctor : proctors) {
+                    sendJsonMessage(proctor, new Message.CandidateRTCOffer(session.getPrincipal().getName(), offer));
                 }
             }
         }
@@ -78,6 +97,8 @@ public class ProctorWebSocketHandler extends TextWebSocketHandler {
     private void sendJsonMessage(WebSocketSession session, Message message)
             throws IOException
     {
-        session.sendMessage(new TextMessage(objectMapper.writeValueAsString(message)));
+        if (session.isOpen()) {
+            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(message)));
+        }
     }
 }

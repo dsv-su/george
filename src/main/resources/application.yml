@@ -11,3 +11,10 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+  jackson:
+    deserialization:
+      fail-on-missing-creator-properties: true
+      fail-on-ignored-properties: true
+      fail-on-null-for-primitives: true
+      fail-on-null-creator-properties: true
+      fail-on-unknown-properties: true

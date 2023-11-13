@@ -54,6 +54,9 @@ public class SpringBootProctoringApplication {
 
     @Bean
     public WebSocketConfigurer proctorWS(ProctorWebSocketHandler proctorWebSocketHandler) {
-        return registry -> registry.addHandler(proctorWebSocketHandler, "/ws/proctor");
+        return registry -> {
+            registry.addHandler(proctorWebSocketHandler, "/ws/proctor");
+            registry.addHandler(proctorWebSocketHandler, "/ws/candidate");
+        };
     }
 }

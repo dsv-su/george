@@ -56,6 +56,7 @@ const Candidate = (props: CandidateProps) => {
     connection.addEventListener('track', (event) => {
       console.log('track', event);
     });
+    // TODO remove listeners on cleanup or they're doubled up
   }, []);
 
   return <h1>{props.candidate}</h1>;

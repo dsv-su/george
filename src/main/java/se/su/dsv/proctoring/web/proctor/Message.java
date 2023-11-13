@@ -18,9 +18,4 @@ public sealed interface Message {
             @JsonProperty("principal_name") String principalName,
             @JsonProperty("offer") RTCSessionDescription sdp)
             implements Message {}
-
-    record RTCSessionDescription(
-            @JsonProperty("type") String type,
-            @JsonProperty("sdp") String sdp)
-            implements Message {}
 }
