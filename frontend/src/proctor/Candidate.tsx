@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { IncomingMessage, useProctorWebsocket } from '../hooks/websockets.ts';
+import Video from '../Video.tsx';
 
 type CandidateProps = {
   candidate: string;
@@ -11,12 +12,11 @@ type Signalling = {
 };
 
 const Candidate = (props: CandidateProps) => {
-  const video1 = useRef<HTMLVideoElement>(null);
-  const video2 = useRef<HTMLVideoElement>(null);
   const { sendJsonMessage } = useProctorWebsocket({
     onMessage,
   });
   const peerConnection = useRef<RTCPeerConnection>();
+  const [streams, setStreams] = useState<MediaStream[]>([]);
 
   const getConnection: () => RTCPeerConnection = () => {
     if (peerConnection.current !== undefined) {
@@ -59,48 +59,55 @@ const Candidate = (props: CandidateProps) => {
       return answer;
     });
     connection.addEventListener('connectionstatechange', (event) => {
-      console.log('connectionstatechange', event);
+      console.log('connectionstatechange', connection.connectionState);
     });
     connection.addEventListener('datachannel', (event) => {
       console.log('datachannel', event);
     });
     connection.addEventListener('icecandidate', (event) => {
-      console.log('icecandidate', event);
+      console.log('icecandidate', event, event.candidate);
     });
     connection.addEventListener('icecandidateerror', (event) => {
       console.log('icecandidateerror', event);
     });
     connection.addEventListener('iceconnectionstatechange', (event) => {
-      console.log('iceconnectionstatechange', event);
+      console.log('iceconnectionstatechange', connection.iceConnectionState);
     });
     connection.addEventListener('icegatheringstatechange', (event) => {
-      console.log('icegatheringstatechange', event);
+      console.log('icegatheringstatechange', connection.iceGatheringState);
     });
     connection.addEventListener('negotiationneeded', (event) => {
       console.log('negotationneeded', event);
     });
     connection.addEventListener('signalingstatechange', (event) => {
-      console.log('signalingstatechange', event);
-      let connection = event.target as RTCPeerConnection;
-      let signalingState = connection.signalingState;
-      console.log(signalingState);
-      let receivers = connection.getReceivers();
-      console.log(receivers);
-      console.log(connection.connectionState);
-      console.log(connection.currentRemoteDescription);
-      console.log(connection.currentLocalDescription);
+      console.log('signalingstatechange', connection.signalingState);
     });
-    connection.addEventListener('track', (event) => {
+    let onTrack = (event: RTCTrackEvent) => {
+      for (const eventStream of event.streams) {
+        setStreams((existing) => {
+          for (const stream of existing) {
+            if (stream.id === eventStream.id) {
+              return existing;
+            }
+          }
+          return [...existing, eventStream];
+        });
+      }
       console.log('track', event);
-    });
+    };
+    connection.addEventListener('track', onTrack);
     // TODO remove listeners on cleanup or they're doubled up
+    return () => {
+      connection.removeEventListener('track', onTrack);
+    };
   }, []);
 
   return (
     <h1>
       {props.candidate}
-      <video ref={video1} autoPlay={true} style={{ maxWidth: '1600px' }}></video>
-      <video ref={video2} autoPlay={true} style={{ maxWidth: '1600px' }}></video>
+      {streams.map((stream) => {
+        return <Video key={stream.id} stream={stream} />;
+      })}
     </h1>
   );
 };
