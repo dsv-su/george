@@ -1,7 +1,8 @@
 import { useParams } from 'react-router-dom';
-import useWebSocket, { ReadyState } from 'react-use-websocket';
+import { ReadyState } from 'react-use-websocket';
 import { useEffect, useRef, useState } from 'react';
 import Candidate, { Signalling } from './proctor/Candidate';
+import { useProctorWebsocket } from './hooks/websockets.ts';
 
 type Message =
   | {
@@ -47,10 +48,7 @@ class SignallingServer {
 
 const Proctor = () => {
   const { examId } = useParams();
-  const origin = window.location.origin.replace('http', 'ws');
-  const { readyState, sendJsonMessage } = useWebSocket(`${origin}/ws/proctor`, {
-    onReconnectStop: (_) => false,
-    shouldReconnect: (_) => true,
+  const { readyState, sendJsonMessage } = useProctorWebsocket({
     onMessage: (message) => {
       onMessage(message);
     },
