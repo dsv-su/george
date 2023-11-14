@@ -2,22 +2,7 @@ import { useParams } from 'react-router-dom';
 import { ReadyState } from 'react-use-websocket';
 import { useEffect, useRef, useState } from 'react';
 import Candidate, { Signalling } from './proctor/Candidate';
-import { useProctorWebsocket } from './hooks/websockets.ts';
-
-type Message =
-  | {
-      type: 'exam_info';
-      title: string;
-    }
-  | {
-      type: 'candidate';
-      principal_name: string;
-    }
-  | {
-      type: 'candidate_rtc_offer';
-      principal_name: string;
-      offer: RTCSessionDescriptionInit;
-    };
+import { IncomingMessage, useProctorWebsocket } from './hooks/websockets.ts';
 
 type ExaminationInfo = string;
 type Candidate = string;
@@ -57,22 +42,16 @@ const Proctor = () => {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const signallingServer = useRef(new SignallingServer());
 
-  const onMessage = (event: MessageEvent<any>) => {
+  const onMessage = (message: IncomingMessage) => {
     try {
-      const message: Message = JSON.parse(event.data);
       console.log(message);
       switch (message.type) {
         case 'exam_info':
           setExamInfo(message.title);
           break;
         case 'candidate':
-          setCandidates((existing) => [...existing, message.principal_name]);
+          setCandidates((existing) => [...new Set([...existing, message.principal_name])]);
           break;
-        case 'candidate_rtc_offer':
-          const answer = signallingServer.current.handleOffer(message.principal_name, message.offer);
-          answer.then((answer) => {
-            console.log('answer to candidate offer', answer);
-          });
       }
     } catch (e) {
       console.error(e);
@@ -83,7 +62,7 @@ const Proctor = () => {
     if (readyState == ReadyState.OPEN) {
       sendJsonMessage({
         type: 'proctor_examination',
-        exam_id: examId,
+        exam_id: examId!,
       });
     }
   }, [readyState, sendJsonMessage]);

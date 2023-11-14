@@ -10,6 +10,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import se.su.dsv.proctoring.services.Candidate;
 import se.su.dsv.proctoring.services.Exam;
 import se.su.dsv.proctoring.services.ExamId;
+import se.su.dsv.proctoring.services.PrincipalName;
 import se.su.dsv.proctoring.services.ProctoringService;
 
 import java.io.IOException;
@@ -17,6 +18,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -28,6 +30,8 @@ public class ProctorWebSocketHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper;
 
     private Map<ExamId, Collection<WebSocketSession>> proctors = new ConcurrentHashMap<>();
+    private Map<PrincipalName, WebSocketSession> connectedUsers = new ConcurrentHashMap<>();
+    private Map<UUID, WebSocketSession> ongoingConnectionRequests = new ConcurrentHashMap<>();
 
     public ProctorWebSocketHandler(final ProctoringService proctoringService, ObjectMapper objectMapper) {
         this.proctoringService = proctoringService;
@@ -39,13 +43,18 @@ public class ProctorWebSocketHandler extends TextWebSocketHandler {
         if (session.getPrincipal() == null) {
             // only authenticated users can open a websocket connection
             session.close(CloseStatus.POLICY_VIOLATION);
+            return;
         }
+        connectedUsers.put(new PrincipalName(session.getPrincipal().getName()), session);
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         for (Collection<WebSocketSession> proctors : proctors.values()) {
             proctors.remove(session);
+        }
+        if (session.getPrincipal() != null) {
+            connectedUsers.remove(new PrincipalName(session.getPrincipal().getName()));
         }
     }
 
@@ -54,6 +63,7 @@ public class ProctorWebSocketHandler extends TextWebSocketHandler {
             throws IOException
     {
         String payload = textMessage.getPayload();
+        System.out.println("<<< " + payload);
         try {
             InboundMessage inboundMessage = objectMapper.readValue(payload, InboundMessage.class);
             handleInboundMessage(session, inboundMessage);
@@ -65,6 +75,7 @@ public class ProctorWebSocketHandler extends TextWebSocketHandler {
     private void handleInboundMessage(WebSocketSession session, InboundMessage inboundMessage)
             throws IOException
     {
+        assert session.getPrincipal() != null; // type hint for IntelliJ
         switch (inboundMessage) {
             case InboundMessage.ProctorExamination(String examId) -> {
                 Optional<Exam> maybeExam = proctoringService.getProctorableExam(new ExamId(examId), session.getPrincipal());
@@ -88,7 +99,23 @@ public class ProctorWebSocketHandler extends TextWebSocketHandler {
                 Collection<WebSocketSession> proctors = this.proctors.getOrDefault(new ExamId(examId), List.of());
                 // TODO: get only the correct proctor
                 for (WebSocketSession proctor : proctors) {
-                    sendJsonMessage(proctor, new Message.CandidateRTCOffer(session.getPrincipal().getName(), offer));
+                    sendJsonMessage(proctor, new Message.CandidateJoined(session.getPrincipal().getName()));
+                }
+            }
+            case InboundMessage.ConnectCandidate connectCandidate -> {
+                WebSocketSession candidate = connectedUsers.get(new PrincipalName(connectCandidate.principalName()));
+                if (candidate != null) {
+                    UUID connectionId = UUID.randomUUID();
+                    ongoingConnectionRequests.put(connectionId, session);
+                    sendJsonMessage(candidate, new Message.ConnectionRequest(connectionId, connectCandidate.offer()));
+                }
+            }
+            case InboundMessage.ConnectionRequestResponse connectionRequestResponse -> {
+                WebSocketSession proctor = ongoingConnectionRequests.remove(connectionRequestResponse.id());
+                if (proctor != null) {
+                    sendJsonMessage(proctor, new Message.ConnectionRequestResponse(
+                            session.getPrincipal().getName(),
+                            connectionRequestResponse.answer()));
                 }
             }
         }
@@ -98,7 +125,9 @@ public class ProctorWebSocketHandler extends TextWebSocketHandler {
             throws IOException
     {
         if (session.isOpen()) {
-            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(message)));
+            String payload = objectMapper.writeValueAsString(message);
+            System.out.println(">>> " + payload);
+            session.sendMessage(new TextMessage(payload));
         }
     }
 }

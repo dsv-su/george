@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import useWebSocket from 'react-use-websocket';
 import { useParams } from 'react-router-dom';
+import { IncomingMessage, useProctorWebsocket } from '../hooks/websockets.ts';
 
 const Exam = () => {
   const [userMedia, setUserMedia] = useState<MediaStream>();
@@ -9,19 +9,32 @@ const Exam = () => {
   const userVideo = useRef<HTMLVideoElement>(null);
   const displayVideo = useRef<HTMLVideoElement>(null);
 
-  const origin = window.location.origin.replace('http', 'ws');
+  const connection = useRef<Record<string, RTCPeerConnection>>({});
 
   const { examId } = useParams();
 
-  function onMessage(message: MessageEvent<any>) {
+  async function onMessage(message: IncomingMessage) {
     console.log(message);
+    switch (message.type) {
+      case 'connection_request':
+        const conn = new RTCPeerConnection();
+        console.log(userMedia?.getTracks());
+        userMedia?.getTracks().forEach((track) => conn.addTrack(track, userMedia));
+        displayMedia?.getTracks().forEach((track) => conn.addTrack(track, displayMedia));
+        await conn.setRemoteDescription(message.offer);
+        let answer = await conn.createAnswer();
+        await conn.setLocalDescription(answer);
+        connection.current[message.id] = conn;
+        sendJsonMessage({
+          type: 'connection_request_response',
+          id: message.id,
+          answer: answer,
+        });
+        break;
+    }
   }
 
-  const { sendJsonMessage } = useWebSocket(`${origin}/ws/candidate`, {
-    onReconnectStop: (_) => false,
-    shouldReconnect: (_) => true,
-    onMessage,
-  });
+  const { sendJsonMessage } = useProctorWebsocket({ onMessage });
 
   async function captureMedia() {
     const userMedia = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });

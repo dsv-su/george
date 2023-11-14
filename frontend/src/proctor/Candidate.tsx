@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { IncomingMessage, useProctorWebsocket } from '../hooks/websockets.ts';
 
 type CandidateProps = {
   candidate: string;
@@ -10,6 +11,11 @@ type Signalling = {
 };
 
 const Candidate = (props: CandidateProps) => {
+  const video1 = useRef<HTMLVideoElement>(null);
+  const video2 = useRef<HTMLVideoElement>(null);
+  const { sendJsonMessage } = useProctorWebsocket({
+    onMessage,
+  });
   const peerConnection = useRef<RTCPeerConnection>();
 
   const getConnection: () => RTCPeerConnection = () => {
@@ -20,6 +26,29 @@ const Candidate = (props: CandidateProps) => {
     peerConnection.current = conn;
     return conn;
   };
+
+  async function onMessage(message: IncomingMessage) {
+    switch (message.type) {
+      case 'candidate_joined':
+        if (message.principal == props.candidate) {
+          const offer = await getConnection().createOffer({
+            offerToReceiveAudio: true,
+            offerToReceiveVideo: true,
+          });
+          await getConnection().setLocalDescription(offer);
+          sendJsonMessage({
+            type: 'connect_candidate',
+            principal: message.principal,
+            offer: offer,
+          });
+        }
+        break;
+      case 'connection_request_response':
+        if (message.principal == props.candidate) {
+          await getConnection().setRemoteDescription(message.answer);
+        }
+    }
+  }
 
   useEffect(() => {
     const connection = getConnection();
@@ -52,6 +81,14 @@ const Candidate = (props: CandidateProps) => {
     });
     connection.addEventListener('signalingstatechange', (event) => {
       console.log('signalingstatechange', event);
+      let connection = event.target as RTCPeerConnection;
+      let signalingState = connection.signalingState;
+      console.log(signalingState);
+      let receivers = connection.getReceivers();
+      console.log(receivers);
+      console.log(connection.connectionState);
+      console.log(connection.currentRemoteDescription);
+      console.log(connection.currentLocalDescription);
     });
     connection.addEventListener('track', (event) => {
       console.log('track', event);
@@ -59,7 +96,13 @@ const Candidate = (props: CandidateProps) => {
     // TODO remove listeners on cleanup or they're doubled up
   }, []);
 
-  return <h1>{props.candidate}</h1>;
+  return (
+    <h1>
+      {props.candidate}
+      <video ref={video1} autoPlay={true} style={{ maxWidth: '1600px' }}></video>
+      <video ref={video2} autoPlay={true} style={{ maxWidth: '1600px' }}></video>
+    </h1>
+  );
 };
 
 export default Candidate;
