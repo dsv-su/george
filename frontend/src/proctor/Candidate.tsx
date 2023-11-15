@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IncomingMessage, useProctorWebsocket } from '../hooks/websockets.ts';
 import Video from '../Video.tsx';
+import { useWebRTC } from '../webrtc.ts';
 
 type CandidateProps = {
   candidate: string;
@@ -20,8 +21,38 @@ const Candidate = (props: CandidateProps) => {
   const { sendJsonMessage } = useProctorWebsocket({
     onMessage,
   });
-  const connections = useRef<PeerConnections>({ camera: new RTCPeerConnection(), screens: [] });
+  const rtc = useWebRTC({
+    name: props.candidate,
+    sendAnswer(answer: RTCSessionDescriptionInit): void | Promise<void> {
+      sendJsonMessage({
+        type: 'camera_stream_answer',
+        principal: props.candidate,
+        answer: answer,
+      });
+    },
+    sendCandidate(candidate: RTCIceCandidate): void | Promise<void> {
+      sendJsonMessage({
+        type: 'proctor_ice_candidate',
+        principal: props.candidate,
+        candidate: candidate.toJSON(),
+      });
+    },
+    sendOffer(offer: RTCSessionDescriptionInit): void | Promise<void> {
+      console.log('unsupported offer from proctor');
+    },
+  });
   const [streams, setStreams] = useState<MediaStream[]>([]);
+
+  useEffect(() => {
+    const ontrack = (event: RTCTrackEvent) => {
+      console.log('ontrack', event);
+      setStreams((existing) => [...existing, event.streams[0]]);
+    };
+    rtc.connection.addEventListener('track', ontrack);
+    return () => {
+      rtc.connection.removeEventListener('track', ontrack);
+    };
+  }, []);
 
   async function onMessage(message: IncomingMessage) {
     switch (message.type) {
@@ -35,31 +66,16 @@ const Candidate = (props: CandidateProps) => {
         break;
       case 'camera_stream_offer':
         if (message.principal == props.candidate) {
-          const conn = connections.current.camera;
-          conn.onconnectionstatechange = (event) => {
-            console.log('connectionstatechange', conn.connectionState);
-          };
-          await conn.setRemoteDescription(message.offer);
-          conn.addTransceiver('video', { direction: 'recvonly' });
-          conn.addTransceiver('audio', { direction: 'recvonly' });
-          const answer = await conn.createAnswer();
-          await conn.setLocalDescription(answer);
-          sendJsonMessage({
-            type: 'camera_stream_answer',
-            principal: message.principal,
-            answer: answer,
-          });
-          //connections.current.camera = conn;
-          conn.ontrack = (ev) => {
-            // there will only ever be one stream
-            console.log('ontrack', ev);
-            //setStreams((existing) => [...existing, streams[0]]);
+          const conn = rtc.connection;
+          await rtc.offerReceived(message.offer, true);
+          conn.onconnectionstatechange = (ev) => {
+            console.log('onconnectionstatechange', conn.connectionState, conn.getSenders(), conn.getReceivers(), conn.getTransceivers());
           };
         }
         break;
       case 'ice_candidate':
         if (message.principal == props.candidate) {
-          await connections.current.camera?.addIceCandidate(message.candidate);
+          await rtc.candidateReceived(new RTCIceCandidate(message.candidate));
         }
         break;
     }
