@@ -24,6 +24,14 @@ const Candidate = (props: CandidateProps) => {
     }
     const conn = new RTCPeerConnection();
     peerConnection.current = conn;
+    void conn
+      .createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true,
+      })
+      .then((offer) => {
+        return conn.setLocalDescription(offer);
+      });
     return conn;
   };
 
@@ -31,15 +39,10 @@ const Candidate = (props: CandidateProps) => {
     switch (message.type) {
       case 'candidate_joined':
         if (message.principal == props.candidate) {
-          const offer = await getConnection().createOffer({
-            offerToReceiveAudio: true,
-            offerToReceiveVideo: true,
-          });
-          await getConnection().setLocalDescription(offer);
           sendJsonMessage({
             type: 'connect_candidate',
             principal: message.principal,
-            offer: offer,
+            offer: getConnection().localDescription?.toJSON(),
           });
         }
         break;
