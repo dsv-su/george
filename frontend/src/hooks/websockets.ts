@@ -11,14 +11,40 @@ export type ProctorExamination = {
 export type ConnectCandidate = {
   type: 'connect_candidate';
   principal: Principal;
+};
+export type CameraStreamOffer = {
+  type: 'camera_stream_offer';
+  id: string;
   offer: RTCSessionDescriptionInit;
 };
-export type ConnectionRequestResponse = {
-  type: 'connection_request_response';
+export type ScreenStreamOffer = {
+  type: 'screen_stream_offer';
   id: string;
+  stream_id: string;
+  offer: RTCSessionDescriptionInit;
+};
+export type CandidateJoinedOutbound = {
+  type: 'candidate_joined';
+  exam_id: string;
+};
+export type CameraStreamAnswer = {
+  type: 'camera_stream_answer';
+  principal: Principal;
   answer: RTCSessionDescriptionInit;
 };
-export type OutboundMessage = ProctorExamination | ConnectCandidate | ConnectionRequestResponse;
+export type IceCandidate = {
+  type: 'ice_candidate';
+  id: string;
+  candidate: RTCIceCandidateInit;
+};
+export type OutboundMessage =
+  | ProctorExamination
+  | ConnectCandidate
+  | CameraStreamOffer
+  | ScreenStreamOffer
+  | CandidateJoinedOutbound
+  | CameraStreamAnswer
+  | IceCandidate;
 
 export type CandidateJoined = {
   type: 'candidate_joined';
@@ -35,14 +61,37 @@ export type ExamCandidate = {
 export type ConnectionRequest = {
   type: 'connection_request';
   id: string;
+};
+export type IncomingCameraStreamOffer = {
+  type: 'camera_stream_offer';
+  principal: Principal;
   offer: RTCSessionDescriptionInit;
 };
-export type IncomingConnectionRequestResponse = {
-  type: 'connection_request_response';
+export type IncomingScreenStreamOffer = {
+  type: 'screen_stream_offer';
   principal: Principal;
+  stream_id: string;
+  offer: RTCSessionDescriptionInit;
+};
+export type IncomingCameraStreamAnswer = {
+  type: 'camera_stream_answer';
+  id: string;
   answer: RTCSessionDescriptionInit;
 };
-export type IncomingMessage = CandidateJoined | ExamInfo | ExamCandidate | ConnectionRequest | IncomingConnectionRequestResponse;
+export type IncomingIceCandidate = {
+  type: 'ice_candidate';
+  principal: Principal;
+  candidate: RTCIceCandidateInit;
+};
+export type IncomingMessage =
+  | CandidateJoined
+  | ExamInfo
+  | ExamCandidate
+  | ConnectionRequest
+  | IncomingCameraStreamOffer
+  | IncomingScreenStreamOffer
+  | IncomingCameraStreamAnswer
+  | IncomingIceCandidate;
 
 export function useProctorWebsocket({ onMessage }: { onMessage: (arg0: IncomingMessage) => void }) {
   const origin = window.location.origin.replace('http', 'ws');

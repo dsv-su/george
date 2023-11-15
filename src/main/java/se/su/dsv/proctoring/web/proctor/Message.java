@@ -12,7 +12,10 @@ import java.util.UUID;
         @JsonSubTypes.Type(value = Message.Candidate.class, name = "candidate"),
         @JsonSubTypes.Type(value = Message.CandidateJoined.class, name = "candidate_joined"),
         @JsonSubTypes.Type(value = Message.ConnectionRequest.class, name = "connection_request"),
-        @JsonSubTypes.Type(value = Message.ConnectionRequestResponse.class, name = "connection_request_response"),
+        @JsonSubTypes.Type(value = Message.CameraStreamOffer.class, name = "camera_stream_offer"),
+        @JsonSubTypes.Type(value = Message.ScreenStreamOffer.class, name = "screen_stream_offer"),
+        @JsonSubTypes.Type(value = Message.CameraStreamAnswer.class, name = "camera_stream_answer"),
+        @JsonSubTypes.Type(value = Message.IceCandidate.class, name = "ice_candidate"),
 })
 public sealed interface Message {
     record ExamInfo(@JsonProperty("title") String title) implements Message {}
@@ -25,17 +28,44 @@ public sealed interface Message {
      * @param offer the WebRTC offer from the remote peer
      */
     record ConnectionRequest(
-            @JsonProperty("id") UUID id,
+            @JsonProperty("id") UUID id)
+            implements Message {}
+
+    /**
+     * An offer to share a camera stream.
+     * @param principalName the candidate whose camera stream is offered
+     * @param offer the WebRTC offer (SDP) from the candidate
+     */
+    record CameraStreamOffer(
+            @JsonProperty("principal") String principalName,
             @JsonProperty("offer") RTCSessionDescription offer)
             implements Message {}
 
     /**
-     * A response to a connection request.
-     * @param principalName the candidate answering the request
-     * @param answer the WebRTC answer from the remote peer
+     * An offer to share a screen stream.
+     * @param principalName the candidate whose screen stream is offered
+     * @param streamId unique identifier for the stream
+     * @param offer the WebRTC offer (SDP) from the candidate
      */
-    record ConnectionRequestResponse(
+    record ScreenStreamOffer(
             @JsonProperty("principal") String principalName,
+            @JsonProperty("stream_id") String streamId,
+            @JsonProperty("offer") RTCSessionDescription offer)
+            implements Message {}
+
+    /**
+     * An answer to a {@link se.su.dsv.proctoring.web.proctor.InboundMessage.CameraStreamOffer} message.
+     *
+     * @param peerConnectionId unique identifier for this peer connection
+     * @param answer the WebRTC answer (SDP) from the proctor
+     */
+    record CameraStreamAnswer(
+            @JsonProperty("id") UUID peerConnectionId,
             @JsonProperty("answer") RTCSessionDescription answer)
+            implements Message {}
+
+    record IceCandidate(
+            @JsonProperty("principal") String principalName,
+            @JsonProperty("candidate") RTCIceCandidate iceCandidate)
             implements Message {}
 }

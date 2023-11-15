@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { IncomingMessage, useProctorWebsocket } from '../hooks/websockets.ts';
 
+type PeerConnections = {
+  camera?: RTCPeerConnection;
+  screens: Record<string, RTCPeerConnection>;
+};
+
 const Exam = () => {
   const [userMedia, setUserMedia] = useState<MediaStream>();
   const [displayMedia, setDisplayMedia] = useState<MediaStream>();
@@ -9,7 +14,7 @@ const Exam = () => {
   const userVideo = useRef<HTMLVideoElement>(null);
   const displayVideo = useRef<HTMLVideoElement>(null);
 
-  const connection = useRef<Record<string, RTCPeerConnection>>({});
+  const connections = useRef<Record<string, PeerConnections>>({});
 
   const { examId } = useParams();
 
@@ -17,19 +22,53 @@ const Exam = () => {
     console.log(message);
     switch (message.type) {
       case 'connection_request':
+        connections.current[message.id] = { camera: undefined, screens: {} };
         const conn = new RTCPeerConnection();
-        console.log(userMedia?.getTracks());
-        userMedia?.getTracks().forEach((track) => conn.addTrack(track, userMedia));
-        displayMedia?.getTracks().forEach((track) => conn.addTrack(track, displayMedia));
-        await conn.setRemoteDescription(message.offer);
-        let answer = await conn.createAnswer();
-        await conn.setLocalDescription(answer);
-        connection.current[message.id] = conn;
-        sendJsonMessage({
-          type: 'connection_request_response',
-          id: message.id,
-          answer: answer,
+        conn.onicecandidate = (event) => {
+          if (event.candidate !== null) {
+            sendJsonMessage({
+              type: 'ice_candidate',
+              id: message.id,
+              candidate: event.candidate.toJSON(),
+            });
+          }
+        };
+        userMedia?.getTracks().forEach((track) => {
+          console.log('adding track', track);
+          conn.addTrack(track, userMedia);
         });
+        const offer = await conn.createOffer({
+          offerToReceiveAudio: true,
+        });
+        await conn.setLocalDescription(offer);
+        connections.current[message.id].camera = conn;
+        sendJsonMessage({
+          type: 'camera_stream_offer',
+          id: message.id,
+          offer: offer,
+        });
+
+        for (const sharedStream of [displayMedia!]) {
+          const share = new RTCPeerConnection();
+          sharedStream.getTracks().forEach((track) => share.addTrack(track, sharedStream));
+          const shareOffer = await share.createOffer();
+          await share.setLocalDescription(shareOffer);
+          sendJsonMessage({
+            type: 'screen_stream_offer',
+            id: message.id,
+            stream_id: sharedStream.id,
+            offer: shareOffer,
+          });
+          connections.current[message.id].screens[sharedStream.id] = share;
+        }
+        // TODO listeners to stream/track/connection
+        // TODO ICE candidates
+        break;
+      case 'camera_stream_answer':
+        const connection = connections.current[message.id].camera;
+        if (connection !== undefined) {
+          await connection.setRemoteDescription(message.answer);
+        }
         break;
     }
   }
@@ -64,7 +103,7 @@ const Exam = () => {
     const connection = new RTCPeerConnection();
     const offer = await connection.createOffer();
     await connection.setLocalDescription(offer);
-    sendJsonMessage({ type: 'candidate_joined', exam_id: examId, offer: offer });
+    sendJsonMessage({ type: 'candidate_joined', exam_id: examId! });
   };
 
   return (
