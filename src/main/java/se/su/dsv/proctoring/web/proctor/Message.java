@@ -16,6 +16,7 @@ import java.util.UUID;
         @JsonSubTypes.Type(value = Message.ScreenStreamOffer.class, name = "screen_stream_offer"),
         @JsonSubTypes.Type(value = Message.CameraStreamAnswer.class, name = "camera_stream_answer"),
         @JsonSubTypes.Type(value = Message.IceCandidate.class, name = "ice_candidate"),
+        @JsonSubTypes.Type(value = Message.ProctorIceCandidate.class, name = "proctor_ice_candidate"),
 })
 public sealed interface Message {
     record ExamInfo(@JsonProperty("title") String title) implements Message {}
@@ -66,6 +67,11 @@ public sealed interface Message {
 
     record IceCandidate(
             @JsonProperty("principal") String principalName,
+            @JsonProperty("candidate") RTCIceCandidate iceCandidate)
+            implements Message {}
+
+    record ProctorIceCandidate(
+            @JsonProperty("id") UUID peerConnectionId,
             @JsonProperty("candidate") RTCIceCandidate iceCandidate)
             implements Message {}
 }

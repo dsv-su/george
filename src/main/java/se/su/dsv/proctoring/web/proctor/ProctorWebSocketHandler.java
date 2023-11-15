@@ -144,6 +144,17 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
                     sendJsonMessage(proctor, new Message.IceCandidate(session.getPrincipal().getName(), iceCandidate));
                 }
             }
+            case InboundMessage.ProctorIceCandidate(String principalName, RTCIceCandidate iceCandidate) -> {
+                PrincipalName candidatePrincipal = new PrincipalName(principalName);
+                WebSocketSession candidate = connectedUsers.get(candidatePrincipal);
+                UUID uuid = peerConnections.get(new PeerConnection(
+                        new PrincipalName(session.getPrincipal().getName()),
+                        candidatePrincipal));
+                if (candidate != null && uuid != null) {
+                    sendJsonMessage(candidate,
+                            new Message.ProctorIceCandidate(uuid, iceCandidate));
+                }
+            }
         }
     }
 
