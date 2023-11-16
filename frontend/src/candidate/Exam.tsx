@@ -69,10 +69,14 @@ function Stream({ streamId, userMedia, displayMedia }: { streamId: string; userM
   const onMessage = (message: IncomingMessage) => {
     switch (message.type) {
       case 'camera_stream_answer':
-        void rtc.answerReceived(message.answer);
+        if (message.id === streamId) {
+          void rtc.answerReceived(message.answer);
+        }
         break;
       case 'proctor_ice_candidate':
-        void rtc.candidateReceived(new RTCIceCandidate(message.candidate));
+        if (message.id === streamId) {
+          void rtc.candidateReceived(new RTCIceCandidate(message.candidate));
+        }
         break;
     }
   };
