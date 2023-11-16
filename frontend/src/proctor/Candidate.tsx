@@ -5,16 +5,6 @@ import { useWebRTC } from '../hooks/webrtc.ts';
 
 type CandidateProps = {
   candidate: string;
-  signalling: Signalling;
-};
-
-type Signalling = {
-  onOfferReceived: (callback: (offer: RTCSessionDescriptionInit) => Promise<RTCSessionDescriptionInit>) => void;
-};
-
-type PeerConnections = {
-  camera: RTCPeerConnection;
-  screens: RTCPeerConnection[];
 };
 
 const Candidate = (props: CandidateProps) => {
@@ -88,58 +78,6 @@ const Candidate = (props: CandidateProps) => {
     }
   }
 
-  // useEffect(() => {
-  //   const connection = getConnection();
-  //   props.signalling.onOfferReceived(async (offer) => {
-  //     await connection.setRemoteDescription(offer);
-  //     const answer = await connection.createAnswer();
-  //     await connection.setLocalDescription(answer);
-  //     return answer;
-  //   });
-  //   connection.addEventListener('connectionstatechange', (event) => {
-  //     console.log('connectionstatechange', connection.connectionState);
-  //   });
-  //   connection.addEventListener('datachannel', (event) => {
-  //     console.log('datachannel', event);
-  //   });
-  //   connection.addEventListener('icecandidate', (event) => {
-  //     console.log('icecandidate', event, event.candidate);
-  //   });
-  //   connection.addEventListener('icecandidateerror', (event) => {
-  //     console.log('icecandidateerror', event);
-  //   });
-  //   connection.addEventListener('iceconnectionstatechange', (event) => {
-  //     console.log('iceconnectionstatechange', connection.iceConnectionState);
-  //   });
-  //   connection.addEventListener('icegatheringstatechange', (event) => {
-  //     console.log('icegatheringstatechange', connection.iceGatheringState);
-  //   });
-  //   connection.addEventListener('negotiationneeded', (event) => {
-  //     console.log('negotationneeded', event);
-  //   });
-  //   connection.addEventListener('signalingstatechange', (event) => {
-  //     console.log('signalingstatechange', connection.signalingState);
-  //   });
-  //   let onTrack = (event: RTCTrackEvent) => {
-  //     for (const eventStream of event.streams) {
-  //       setStreams((existing) => {
-  //         for (const stream of existing) {
-  //           if (stream.id === eventStream.id) {
-  //             return existing;
-  //           }
-  //         }
-  //         return [...existing, eventStream];
-  //       });
-  //     }
-  //     console.log('track', event);
-  //   };
-  //   connection.addEventListener('track', onTrack);
-  //   // TODO remove listeners on cleanup or they're doubled up
-  //   return () => {
-  //     connection.removeEventListener('track', onTrack);
-  //   };
-  // }, []);
-
   return (
     <h1>
       {props.candidate}
@@ -151,4 +89,3 @@ const Candidate = (props: CandidateProps) => {
 };
 
 export default Candidate;
-export type { Signalling };
