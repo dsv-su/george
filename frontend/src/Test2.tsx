@@ -11,7 +11,7 @@ export default function Test2() {
     sendAnswer(answer: RTCSessionDescriptionInit): Promise<void> {
       return receiver.answerReceived(answer);
     },
-    sendCandidate(candidate: RTCIceCandidate): Promise<void> {
+    sendCandidate(candidate: RTCIceCandidateInit): Promise<void> {
       return receiver.candidateReceived(candidate);
     },
     sendOffer(offer: RTCSessionDescriptionInit): Promise<void> {
@@ -34,7 +34,7 @@ export default function Test2() {
 
     video1.current!.srcObject = userMedia;
 
-    receiver.connection.ontrack = (event) => {
+    receiver.connection().ontrack = (event) => {
       console.log('receiver ontrack', event);
       if (video2.current?.srcObject === null) {
         video2.current!.srcObject = event.streams[0];
@@ -44,14 +44,14 @@ export default function Test2() {
     };
 
     userMedia.getTracks().forEach((track) => {
-      sender.connection.addTrack(track, userMedia);
+      sender.connection().addTrack(track, userMedia);
     });
     displayMedia.getTracks().forEach((track) => {
-      sender.connection.addTrack(track, displayMedia);
+      sender.connection().addTrack(track, displayMedia);
     });
 
     userMedia2.getTracks().forEach((track) => {
-      receiver.connection.addTrack(track, userMedia2);
+      receiver.connection().addTrack(track, userMedia2);
     });
   };
 
