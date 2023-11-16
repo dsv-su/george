@@ -75,7 +75,7 @@ function Stream({ streamId, userMedia, displayMedia }: { streamId: string; userM
         break;
       case 'proctor_ice_candidate':
         if (message.id === streamId) {
-          void rtc.candidateReceived(new RTCIceCandidate(message.candidate));
+          void rtc.candidateReceived(message.candidate);
         }
         break;
     }
@@ -87,11 +87,11 @@ function Stream({ streamId, userMedia, displayMedia }: { streamId: string; userM
     sendAnswer(_: RTCSessionDescriptionInit): void {
       console.log('unsupported answer by candidate');
     },
-    sendCandidate(candidate: RTCIceCandidate): void {
+    sendCandidate(candidate: RTCIceCandidateInit): void {
       sendJsonMessage({
         type: 'ice_candidate',
         id: streamId,
-        candidate: candidate.toJSON(),
+        candidate: candidate,
       });
     },
     sendOffer(offer: RTCSessionDescriptionInit): void {

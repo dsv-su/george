@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 type WebRTCOptions = RTCConfiguration & {
   sendOffer: (offer: RTCSessionDescriptionInit) => void | Promise<void>;
   sendAnswer: (answer: RTCSessionDescriptionInit) => void | Promise<void>;
-  sendCandidate: (candidate: RTCIceCandidate) => void | Promise<void>;
+  sendCandidate: (candidate: RTCIceCandidateInit) => void | Promise<void>;
   name?: string;
 };
 
@@ -11,7 +11,7 @@ type WebRTCHook = {
   connection: () => RTCPeerConnection;
   offerReceived: (offer: RTCSessionDescriptionInit, polite: boolean) => Promise<void>;
   answerReceived: (answer: RTCSessionDescriptionInit) => Promise<void>;
-  candidateReceived: (candidate: RTCIceCandidate) => Promise<void>;
+  candidateReceived: (candidate: RTCIceCandidateInit) => Promise<void>;
 };
 
 export function useWebRTC(options: WebRTCOptions): WebRTCHook {
@@ -36,7 +36,7 @@ export function useWebRTC(options: WebRTCOptions): WebRTCHook {
     await connection.setRemoteDescription(answer);
   };
 
-  const candidateReceived = async (candidate: RTCIceCandidate) => {
+  const candidateReceived = async (candidate: RTCIceCandidateInit) => {
     const connection = connectionRef.current!;
     if (connection.remoteDescription) {
       await connection.addIceCandidate(candidate);
@@ -61,7 +61,7 @@ export function useWebRTC(options: WebRTCOptions): WebRTCHook {
 
     const onicecandidate = async (event: RTCPeerConnectionIceEvent) => {
       if (event.candidate) {
-        await options.sendCandidate(event.candidate);
+        await options.sendCandidate(event.candidate.toJSON());
       }
     };
 

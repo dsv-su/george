@@ -20,11 +20,11 @@ const Candidate = (props: CandidateProps) => {
         answer: answer,
       });
     },
-    sendCandidate(candidate: RTCIceCandidate): void | Promise<void> {
+    sendCandidate(candidate: RTCIceCandidateInit): void | Promise<void> {
       sendJsonMessage({
         type: 'proctor_ice_candidate',
         principal: props.candidate,
-        candidate: candidate.toJSON(),
+        candidate: candidate,
       });
     },
     sendOffer(_: RTCSessionDescriptionInit): void | Promise<void> {
@@ -68,7 +68,7 @@ const Candidate = (props: CandidateProps) => {
         break;
       case 'ice_candidate':
         if (message.principal == props.candidate) {
-          await rtc.candidateReceived(new RTCIceCandidate(message.candidate));
+          await rtc.candidateReceived(message.candidate);
         }
         break;
     }
