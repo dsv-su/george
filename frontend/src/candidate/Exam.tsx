@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { IncomingMessage, useProctorWebsocket } from '../hooks/websockets.ts';
-import { useWebRTC } from '../hooks/webrtc.ts';
+import useCandidateWebSocket, { InboundMessage } from '../hooks/useCandidateWebSocket.ts';
+import useCandidateRTC from '../hooks/useCandidateRTC.ts';
 
 const Exam = () => {
   const [userMedia, setUserMedia] = useState<MediaStream>();
@@ -14,16 +14,16 @@ const Exam = () => {
 
   const { examId } = useParams();
 
-  async function onMessage(message: IncomingMessage) {
+  async function onMessage(message: InboundMessage) {
     console.log(message);
     switch (message.type) {
       case 'connection_request':
-        setConnections((existing) => [...existing, message.id]);
+        setConnections((existing) => [...existing, message.connection_id]);
         break;
     }
   }
 
-  const { sendJsonMessage } = useProctorWebsocket({ onMessage });
+  const { sendJsonMessage } = useCandidateWebSocket({ onMessage });
 
   async function captureMedia() {
     const userMedia = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
@@ -66,42 +66,7 @@ const Exam = () => {
 };
 
 function Stream({ streamId, userMedia, displayMedia }: { streamId: string; userMedia: MediaStream; displayMedia: MediaStream }) {
-  const onMessage = (message: IncomingMessage) => {
-    switch (message.type) {
-      case 'camera_stream_answer':
-        if (message.id === streamId) {
-          void rtc.answerReceived(message.answer);
-        }
-        break;
-      case 'proctor_ice_candidate':
-        if (message.id === streamId) {
-          void rtc.candidateReceived(message.candidate);
-        }
-        break;
-    }
-  };
-
-  const { sendJsonMessage } = useProctorWebsocket({ onMessage });
-  const rtc = useWebRTC({
-    name: 'candidate',
-    sendAnswer(_: RTCSessionDescriptionInit): void {
-      console.log('unsupported answer by candidate');
-    },
-    sendCandidate(candidate: RTCIceCandidateInit): void {
-      sendJsonMessage({
-        type: 'ice_candidate',
-        id: streamId,
-        candidate: candidate,
-      });
-    },
-    sendOffer(offer: RTCSessionDescriptionInit): void {
-      sendJsonMessage({
-        type: 'camera_stream_offer',
-        id: streamId,
-        offer: offer,
-      });
-    },
-  });
+  const rtc = useCandidateRTC({ id: streamId });
 
   useEffect(() => {
     for (const track of userMedia.getTracks()) {

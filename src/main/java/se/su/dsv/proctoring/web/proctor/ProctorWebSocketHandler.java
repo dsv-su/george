@@ -6,7 +6,6 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
-import org.springframework.web.socket.handler.TextWebSocketHandler;
 import se.su.dsv.proctoring.services.Candidate;
 import se.su.dsv.proctoring.services.Exam;
 import se.su.dsv.proctoring.services.ExamId;
@@ -14,6 +13,7 @@ import se.su.dsv.proctoring.services.PrincipalName;
 import se.su.dsv.proctoring.services.ProctoringService;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -165,6 +165,68 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
             String payload = objectMapper.writeValueAsString(message);
             System.out.println("\u001B[34m>>> " + payload + "\u001B[0m");
             session.sendMessage(new TextMessage(payload));
+        }
+    }
+
+    public class CandidateHandler extends BufferingTextWebSocketHandler {
+        @Override
+        public void afterConnectionEstablished(WebSocketSession session)
+                throws Exception
+        {
+            if (session.getPrincipal() == null) {
+                session.close(CloseStatus.POLICY_VIOLATION);
+            }
+        }
+
+        @Override
+        protected void handleTextMessage(WebSocketSession session, TextMessage message)
+                throws Exception
+        {
+            String payload = message.getPayload();
+            System.out.println("\u001B[31m<<< " + payload + "\u001B[0m");
+            try {
+                CandidateMessage.Inbound inboundMessage = objectMapper.readValue(payload, CandidateMessage.Inbound.class);
+                handleInboundMessage(session, inboundMessage);
+            } catch (JsonProcessingException e) {
+                session.sendMessage(INVALID_MESSAGE);
+            }
+        }
+
+        private void handleInboundMessage(WebSocketSession session, CandidateMessage.Inbound inboundMessage)
+                throws IOException
+        {
+            assert session.getPrincipal() != null; // type hint for IntelliJ, enforced on connection opened
+            switch (inboundMessage) {
+                case CandidateMessage.Inbound.Joined(ExamId examId) -> {
+                    if (canTake(examId, session.getPrincipal())) {
+                        Collection<WebSocketSession> proctors =
+                                ProctorWebSocketHandler.this.proctors.getOrDefault(examId, List.of());
+                        // TODO: get only the correct proctor
+                        for (WebSocketSession proctor : proctors) {
+                            sendJsonMessage(proctor, new Message.CandidateJoined(session.getPrincipal().getName()));
+                        }
+                    }
+                }
+                case RTCMessage.Offer(UUID connectionId, RTCSessionDescription offer) -> {
+                    WebSocketSession proctor = ongoingConnectionRequests.get(connectionId);
+                    if (proctor != null) {
+                        sendJsonMessage(proctor, new Message.CameraStreamOffer(session.getPrincipal().getName(), offer));
+                    }
+                }
+                case RTCMessage.Answer(UUID connectionId, RTCSessionDescription answer) -> {
+                }
+                case RTCMessage.ICECandidate(UUID connectionId, RTCIceCandidate candidate) -> {
+                    WebSocketSession proctor = ongoingConnectionRequests.get(connectionId);
+                    if (proctor != null) {
+                        sendJsonMessage(proctor, new Message.IceCandidate(session.getPrincipal().getName(), candidate));
+                    }
+                }
+            }
+        }
+
+        private boolean canTake(ExamId examId, Principal principal) {
+            // TODO: check if the exam is ongoing and if the principal is a candidate
+            return true;
         }
     }
 }
