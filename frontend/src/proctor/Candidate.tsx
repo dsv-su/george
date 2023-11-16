@@ -46,7 +46,14 @@ const Candidate = (props: CandidateProps) => {
   useEffect(() => {
     const ontrack = (event: RTCTrackEvent) => {
       console.log('ontrack', event);
-      setStreams((existing) => [...existing, event.streams[0]]);
+      setStreams((existing) => {
+        for (const stream of existing) {
+          if (stream.id === event.streams[0].id) {
+            return [...existing];
+          }
+        }
+        return [...existing, event.streams[0]];
+      });
     };
     rtc.connection().addEventListener('track', ontrack);
     return () => {
