@@ -100,15 +100,12 @@ function Stream({ streamId, userMedia, displayMedia }: { streamId: string; userM
   });
 
   useEffect(() => {
-    if (rtc.connection.getSenders().length > 0) {
-      return;
-    }
     for (const track of userMedia.getTracks()) {
       console.log('adding track');
-      rtc.connection.addTrack(track, userMedia);
+      rtc.connection().addTrack(track, userMedia);
     }
     for (const track of displayMedia.getTracks()) {
-      rtc.connection.addTrack(track, displayMedia);
+      rtc.connection().addTrack(track, displayMedia);
     }
   }, []);
 

@@ -8,7 +8,7 @@ type WebRTCOptions = RTCConfiguration & {
 };
 
 type WebRTCHook = {
-  connection: RTCPeerConnection;
+  connection: () => RTCPeerConnection;
   offerReceived: (offer: RTCSessionDescriptionInit, polite: boolean) => Promise<void>;
   answerReceived: (answer: RTCSessionDescriptionInit) => Promise<void>;
   candidateReceived: (candidate: RTCIceCandidate) => Promise<void>;
@@ -19,9 +19,6 @@ export function useWebRTC(options: WebRTCOptions): WebRTCHook {
   const makingOffer = useRef(false);
 
   const connectionRef = useRef<RTCPeerConnection>(null);
-  if (connectionRef.current === null) {
-    connectionRef.current = new RTCPeerConnection(options);
-  }
 
   const offerReceived = async (offer: RTCSessionDescriptionInit, polite: boolean) => {
     const connection = connectionRef.current!;
@@ -47,11 +44,11 @@ export function useWebRTC(options: WebRTCOptions): WebRTCHook {
   };
 
   useEffect(() => {
-    const connection = connectionRef.current!;
+    const connection = new RTCPeerConnection(options);
+    connectionRef.current = connection;
 
     const onnegotiationneeded = async () => {
       try {
-        console.log('onnegotiationneeded', connection.getSenders());
         makingOffer.current = true;
         const offer = await connection.createOffer();
         await connection.setLocalDescription(offer);
@@ -72,11 +69,12 @@ export function useWebRTC(options: WebRTCOptions): WebRTCHook {
     return () => {
       connection.removeEventListener('negotiationneeded', onnegotiationneeded);
       connection.removeEventListener('icecandidate', onicecandidate);
+      connection.close();
     };
   }, []);
 
   return {
-    connection: connectionRef.current,
+    connection: () => connectionRef.current!,
     offerReceived,
     answerReceived,
     candidateReceived,

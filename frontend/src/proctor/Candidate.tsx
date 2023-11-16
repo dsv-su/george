@@ -48,9 +48,9 @@ const Candidate = (props: CandidateProps) => {
       console.log('ontrack', event);
       setStreams((existing) => [...existing, event.streams[0]]);
     };
-    rtc.connection.addEventListener('track', ontrack);
+    rtc.connection().addEventListener('track', ontrack);
     return () => {
-      rtc.connection.removeEventListener('track', ontrack);
+      rtc.connection().removeEventListener('track', ontrack);
     };
   }, []);
 
@@ -66,7 +66,7 @@ const Candidate = (props: CandidateProps) => {
         break;
       case 'camera_stream_offer':
         if (message.principal == props.candidate) {
-          const conn = rtc.connection;
+          const conn = rtc.connection();
           await rtc.offerReceived(message.offer, true);
           conn.onconnectionstatechange = (ev) => {
             console.log('onconnectionstatechange', conn.connectionState, conn.getSenders(), conn.getReceivers(), conn.getTransceivers());
