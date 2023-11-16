@@ -15,30 +15,20 @@ type WebRTCHook = {
 };
 
 export function useWebRTC(options: WebRTCOptions): WebRTCHook {
-  // ICE candidates are potentially generated and sent before the remote description is set,
-  // so we store them in a queue until the remote description is set
-  const pendingCandidates = useRef<RTCIceCandidate[]>([]);
   // used for the "Perfect negotiation" pattern (https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation)
   const makingOffer = useRef(false);
 
   const connectionRef = useRef<RTCPeerConnection>(null);
   if (connectionRef.current === null) {
-    console.log(options.name, 'creating RTCPeerConnection');
     connectionRef.current = new RTCPeerConnection(options);
   }
-
-  const setRemoteDescription = async (connection: RTCPeerConnection, offer: RTCSessionDescriptionInit) => {
-    await connection.setRemoteDescription(offer);
-    pendingCandidates.current.forEach((candidate) => connection.addIceCandidate(candidate));
-    pendingCandidates.current = [];
-  };
 
   const offerReceived = async (offer: RTCSessionDescriptionInit, polite: boolean) => {
     const connection = connectionRef.current!;
     if (!polite && (makingOffer.current || connection.signalingState !== 'stable')) {
       return;
     }
-    await setRemoteDescription(connection, offer);
+    await connection.setRemoteDescription(offer);
     const answer = await connection.createAnswer();
     await connection.setLocalDescription(answer);
     await options.sendAnswer(answer);
@@ -46,15 +36,13 @@ export function useWebRTC(options: WebRTCOptions): WebRTCHook {
 
   const answerReceived = async (answer: RTCSessionDescriptionInit) => {
     const connection = connectionRef.current!;
-    await setRemoteDescription(connection, answer);
+    await connection.setRemoteDescription(answer);
   };
 
   const candidateReceived = async (candidate: RTCIceCandidate) => {
     const connection = connectionRef.current!;
     if (connection.remoteDescription) {
       await connection.addIceCandidate(candidate);
-    } else {
-      pendingCandidates.current.push(candidate);
     }
   };
 
