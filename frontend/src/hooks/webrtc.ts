@@ -45,6 +45,7 @@ export function useWebRTC(options: WebRTCOptions): WebRTCHook {
 
   useEffect(() => {
     const connection = new RTCPeerConnection(options);
+    // @ts-ignore
     connectionRef.current = connection;
 
     const onnegotiationneeded = async () => {
