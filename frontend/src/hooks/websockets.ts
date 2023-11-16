@@ -37,6 +37,11 @@ export type IceCandidate = {
   id: string;
   candidate: RTCIceCandidateInit;
 };
+export type ProctorIceCandidate = {
+  type: 'proctor_ice_candidate';
+  principal: Principal;
+  candidate: RTCIceCandidateInit;
+};
 export type OutboundMessage =
   | ProctorExamination
   | ConnectCandidate
@@ -44,7 +49,8 @@ export type OutboundMessage =
   | ScreenStreamOffer
   | CandidateJoinedOutbound
   | CameraStreamAnswer
-  | IceCandidate;
+  | IceCandidate
+  | ProctorIceCandidate;
 
 export type CandidateJoined = {
   type: 'candidate_joined';
@@ -83,6 +89,11 @@ export type IncomingIceCandidate = {
   principal: Principal;
   candidate: RTCIceCandidateInit;
 };
+export type IncomingProctoreIceCandidate = {
+  type: 'proctor_ice_candidate';
+  id: string;
+  candidate: RTCIceCandidateInit;
+};
 export type IncomingMessage =
   | CandidateJoined
   | ExamInfo
@@ -91,7 +102,8 @@ export type IncomingMessage =
   | IncomingCameraStreamOffer
   | IncomingScreenStreamOffer
   | IncomingCameraStreamAnswer
-  | IncomingIceCandidate;
+  | IncomingIceCandidate
+  | IncomingProctoreIceCandidate;
 
 export function useProctorWebsocket({ onMessage }: { onMessage: (arg0: IncomingMessage) => void }) {
   const origin = window.location.origin.replace('http', 'ws');

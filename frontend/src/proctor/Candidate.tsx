@@ -27,7 +27,7 @@ const Candidate = (props: CandidateProps) => {
         candidate: candidate.toJSON(),
       });
     },
-    sendOffer(offer: RTCSessionDescriptionInit): void | Promise<void> {
+    sendOffer(_: RTCSessionDescriptionInit): void | Promise<void> {
       console.log('unsupported offer from proctor');
     },
   });
@@ -63,11 +63,7 @@ const Candidate = (props: CandidateProps) => {
         break;
       case 'camera_stream_offer':
         if (message.principal == props.candidate) {
-          const conn = rtc.connection();
           await rtc.offerReceived(message.offer, true);
-          conn.onconnectionstatechange = (ev) => {
-            console.log('onconnectionstatechange', conn.connectionState, conn.getSenders(), conn.getReceivers(), conn.getTransceivers());
-          };
         }
         break;
       case 'ice_candidate':
