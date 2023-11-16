@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { IncomingMessage, useProctorWebsocket } from '../hooks/websockets.ts';
 import Video from '../Video.tsx';
-import { useWebRTC } from '../webrtc.ts';
+import { useWebRTC } from '../hooks/webrtc.ts';
 
 type CandidateProps = {
   candidate: string;

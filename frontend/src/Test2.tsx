@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useWebRTC } from './webrtc.ts';
+import { useWebRTC } from './hooks/webrtc.ts';
 
 export default function Test2() {
   const video1 = useRef<HTMLVideoElement>(null);

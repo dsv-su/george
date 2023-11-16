@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { IncomingMessage, useProctorWebsocket } from '../hooks/websockets.ts';
-import { useWebRTC } from '../webrtc.ts';
+import { useWebRTC } from '../hooks/webrtc.ts';
 
 const Exam = () => {
   const [userMedia, setUserMedia] = useState<MediaStream>();
