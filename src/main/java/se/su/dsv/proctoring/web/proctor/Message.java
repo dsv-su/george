@@ -17,6 +17,7 @@ import java.util.UUID;
         @JsonSubTypes.Type(value = Message.CameraStreamAnswer.class, name = "camera_stream_answer"),
         @JsonSubTypes.Type(value = Message.IceCandidate.class, name = "ice_candidate"),
         @JsonSubTypes.Type(value = Message.ProctorIceCandidate.class, name = "proctor_ice_candidate"),
+        @JsonSubTypes.Type(value = Message.ConnectionEstablished.class, name = "connection_established"),
 })
 public sealed interface Message {
     record ExamInfo(@JsonProperty("title") String title) implements Message {}
@@ -29,7 +30,7 @@ public sealed interface Message {
      * @param offer the WebRTC offer from the remote peer
      */
     record ConnectionRequest(
-            @JsonProperty("id") UUID id)
+            @JsonProperty("connection_id") UUID id)
             implements Message {}
 
     /**
@@ -73,5 +74,10 @@ public sealed interface Message {
     record ProctorIceCandidate(
             @JsonProperty("id") UUID peerConnectionId,
             @JsonProperty("candidate") RTCIceCandidate iceCandidate)
+            implements Message {}
+
+    record ConnectionEstablished(
+            @JsonProperty("connection_id") UUID peerConnectionId,
+            @JsonProperty("principal") String principalName)
             implements Message {}
 }

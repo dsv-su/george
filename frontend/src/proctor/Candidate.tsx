@@ -1,36 +1,47 @@
 import { useEffect, useState } from 'react';
-import { IncomingMessage, useProctorWebsocket } from '../hooks/websockets.ts';
 import Video from '../Video.tsx';
-import { useWebRTC } from '../hooks/webrtc.ts';
+import useProctorRTC from '../hooks/useProctorRTC.ts';
+import useProctorWebSocket, { InboundMessage } from '../hooks/useProctorWebSocket.ts';
 
 type CandidateProps = {
   candidate: string;
 };
 
 const Candidate = (props: CandidateProps) => {
-  const { sendJsonMessage } = useProctorWebsocket({
+  const { sendJsonMessage } = useProctorWebSocket({
     onMessage,
   });
-  const rtc = useWebRTC({
-    name: props.candidate,
-    sendAnswer(answer: RTCSessionDescriptionInit): void | Promise<void> {
-      sendJsonMessage({
-        type: 'camera_stream_answer',
-        principal: props.candidate,
-        answer: answer,
-      });
-    },
-    sendCandidate(candidate: RTCIceCandidateInit): void | Promise<void> {
-      sendJsonMessage({
-        type: 'proctor_ice_candidate',
-        principal: props.candidate,
-        candidate: candidate,
-      });
-    },
-    sendOffer(_: RTCSessionDescriptionInit): void | Promise<void> {
-      console.log('unsupported offer from proctor');
-    },
-  });
+
+  const [connectionId, setConnectionId] = useState<string | undefined>();
+
+  async function onMessage(message: InboundMessage) {
+    switch (message.type) {
+      case 'candidate_joined':
+        if (message.principal == props.candidate) {
+          sendJsonMessage({
+            type: 'connect_candidate',
+            principal: message.principal,
+          });
+        }
+        break;
+      case 'connection_established':
+        if (message.principal == props.candidate) {
+          setConnectionId(message.connection_id);
+        }
+        break;
+    }
+  }
+
+  return (
+    <h1>
+      {props.candidate}
+      {connectionId && <LiveView key={connectionId} id={connectionId} />}
+    </h1>
+  );
+};
+
+function LiveView({ id }: { id: string }) {
+  const rtc = useProctorRTC({ id });
   const [streams, setStreams] = useState<MediaStream[]>([]);
 
   useEffect(() => {
@@ -51,37 +62,13 @@ const Candidate = (props: CandidateProps) => {
     };
   }, []);
 
-  async function onMessage(message: IncomingMessage) {
-    switch (message.type) {
-      case 'candidate_joined':
-        if (message.principal == props.candidate) {
-          sendJsonMessage({
-            type: 'connect_candidate',
-            principal: message.principal,
-          });
-        }
-        break;
-      case 'camera_stream_offer':
-        if (message.principal == props.candidate) {
-          await rtc.offerReceived(message.offer, true);
-        }
-        break;
-      case 'ice_candidate':
-        if (message.principal == props.candidate) {
-          await rtc.candidateReceived(message.candidate);
-        }
-        break;
-    }
-  }
-
   return (
-    <h1>
-      {props.candidate}
+    <div>
       {streams.map((stream) => {
         return <Video key={stream.id} stream={stream} />;
       })}
-    </h1>
+    </div>
   );
-};
+}
 
 export default Candidate;

@@ -30,11 +30,12 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
     private final ObjectMapper objectMapper;
 
     private Map<ExamId, Collection<WebSocketSession>> proctors = new ConcurrentHashMap<>();
-    private Map<PrincipalName, WebSocketSession> connectedUsers = new ConcurrentHashMap<>();
-    private Map<UUID, WebSocketSession> ongoingConnectionRequests = new ConcurrentHashMap<>();
 
-    record PeerConnection(PrincipalName proctor, PrincipalName candidate) {}
-    private Map<PeerConnection, UUID> peerConnections = new ConcurrentHashMap<>();
+    private Map<PrincipalName, WebSocketSession> connectedProctors = new ConcurrentHashMap<>();
+    private Map<PrincipalName, WebSocketSession> connectedCandidates = new ConcurrentHashMap<>();
+
+    private Map<UUID, RTCConnection> rtcConnections = new ConcurrentHashMap<>();
+    record RTCConnection(WebSocketSession proctor, WebSocketSession candidate) { }
 
     public ProctorWebSocketHandler(final ProctoringService proctoringService, ObjectMapper objectMapper) {
         this.proctoringService = proctoringService;
@@ -48,7 +49,7 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
             session.close(CloseStatus.POLICY_VIOLATION);
             return;
         }
-        connectedUsers.put(new PrincipalName(session.getPrincipal().getName()), session);
+        connectedProctors.put(new PrincipalName(session.getPrincipal().getName()), session);
     }
 
     @Override
@@ -57,7 +58,7 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
             proctors.remove(session);
         }
         if (session.getPrincipal() != null) {
-            connectedUsers.remove(new PrincipalName(session.getPrincipal().getName()));
+            connectedProctors.remove(new PrincipalName(session.getPrincipal().getName()));
         }
     }
 
@@ -98,67 +99,47 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
                     session.sendMessage(ACCESS_DENIED);
                 }
             }
-            case InboundMessage.CandidateJoined(String examId) -> {
-                Collection<WebSocketSession> proctors = this.proctors.getOrDefault(new ExamId(examId), List.of());
-                // TODO: get only the correct proctor
-                for (WebSocketSession proctor : proctors) {
-                    sendJsonMessage(proctor, new Message.CandidateJoined(session.getPrincipal().getName()));
-                }
-            }
             case InboundMessage.ConnectCandidate connectCandidate -> {
-                WebSocketSession candidate = connectedUsers.get(new PrincipalName(connectCandidate.principalName()));
+                WebSocketSession candidate = connectedCandidates.get(new PrincipalName(connectCandidate.principalName()));
                 if (candidate != null) {
                     UUID connectionId = UUID.randomUUID();
-                    peerConnections.put(new PeerConnection(
-                            new PrincipalName(session.getPrincipal().getName()),
-                            new PrincipalName(connectCandidate.principalName())), connectionId);
-                    ongoingConnectionRequests.put(connectionId, session);
+                    rtcConnections.put(connectionId, new RTCConnection(session, candidate));
+                    sendJsonMessage(session, new Message.ConnectionEstablished(connectionId, connectCandidate.principalName()));
                     sendJsonMessage(candidate, new Message.ConnectionRequest(connectionId));
                 }
             }
-            case InboundMessage.CameraStreamOffer(UUID peerConnectionId, RTCSessionDescription offer) -> {
-                WebSocketSession proctor = ongoingConnectionRequests.get(peerConnectionId);
-                if (proctor != null) {
-                    sendJsonMessage(proctor, new Message.CameraStreamOffer(session.getPrincipal().getName(), offer));
+            case RTCMessage.Answer answer -> {
+                RTCConnection rtcConnection = rtcConnections.get(answer.connectionId());
+                if (rtcConnection != null) {
+                    sendJsonMessage(rtcConnection.candidate(), answer);
                 }
             }
-            case InboundMessage.ScreenStreamOffer(UUID peerConnectionId, String streamId, RTCSessionDescription offer) -> {
-                WebSocketSession proctor = ongoingConnectionRequests.get(peerConnectionId);
-                if (proctor != null) {
-                    sendJsonMessage(proctor, new Message.ScreenStreamOffer(session.getPrincipal().getName(), streamId, offer));
+            case RTCMessage.ICECandidate iceCandidate -> {
+                RTCConnection rtcConnection = rtcConnections.get(iceCandidate.connectionId());
+                if (rtcConnection != null) {
+                    sendJsonMessage(rtcConnection.candidate(), iceCandidate);
                 }
             }
-            case InboundMessage.CameraStreamAnswer(String principalName, RTCSessionDescription answer) -> {
-                PrincipalName candidatePrincipal = new PrincipalName(principalName);
-                WebSocketSession candidate = connectedUsers.get(candidatePrincipal);
-                UUID uuid = peerConnections.get(new PeerConnection(
-                        new PrincipalName(session.getPrincipal().getName()),
-                        candidatePrincipal));
-                if (candidate != null && uuid != null) {
-                    sendJsonMessage(candidate, new Message.CameraStreamAnswer(uuid, answer));
-                }
-            }
-            case InboundMessage.IceCandidate(UUID peerConnectionId, RTCIceCandidate iceCandidate) -> {
-                WebSocketSession proctor = ongoingConnectionRequests.get(peerConnectionId);
-                if (proctor != null) {
-                    sendJsonMessage(proctor, new Message.IceCandidate(session.getPrincipal().getName(), iceCandidate));
-                }
-            }
-            case InboundMessage.ProctorIceCandidate(String principalName, RTCIceCandidate iceCandidate) -> {
-                PrincipalName candidatePrincipal = new PrincipalName(principalName);
-                WebSocketSession candidate = connectedUsers.get(candidatePrincipal);
-                UUID uuid = peerConnections.get(new PeerConnection(
-                        new PrincipalName(session.getPrincipal().getName()),
-                        candidatePrincipal));
-                if (candidate != null && uuid != null) {
-                    sendJsonMessage(candidate,
-                            new Message.ProctorIceCandidate(uuid, iceCandidate));
+            case RTCMessage.Offer offer -> {
+                RTCConnection rtcConnection = rtcConnections.get(offer.connectionId());
+                if (rtcConnection != null) {
+                    sendJsonMessage(rtcConnection.candidate(), offer);
                 }
             }
         }
     }
 
     private void sendJsonMessage(WebSocketSession session, Message message)
+            throws IOException
+    {
+        if (session.isOpen()) {
+            String payload = objectMapper.writeValueAsString(message);
+            System.out.println("\u001B[34m>>> " + payload + "\u001B[0m");
+            session.sendMessage(new TextMessage(payload));
+        }
+    }
+
+    private void sendJsonMessage(WebSocketSession session, RTCMessage message)
             throws IOException
     {
         if (session.isOpen()) {
@@ -175,6 +156,14 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
         {
             if (session.getPrincipal() == null) {
                 session.close(CloseStatus.POLICY_VIOLATION);
+            }
+            connectedCandidates.put(new PrincipalName(session.getPrincipal().getName()), session);
+        }
+
+        @Override
+        public void afterConnectionClosed(final WebSocketSession session, final CloseStatus status) {
+            if (session.getPrincipal() != null) {
+                connectedCandidates.remove(new PrincipalName(session.getPrincipal().getName()));
             }
         }
 
@@ -197,28 +186,32 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
         {
             assert session.getPrincipal() != null; // type hint for IntelliJ, enforced on connection opened
             switch (inboundMessage) {
-                case CandidateMessage.Inbound.Joined(ExamId examId) -> {
-                    if (canTake(examId, session.getPrincipal())) {
+                case CandidateMessage.Inbound.Joined(String examId) -> {
+                    if (canTake(new ExamId(examId), session.getPrincipal())) {
                         Collection<WebSocketSession> proctors =
-                                ProctorWebSocketHandler.this.proctors.getOrDefault(examId, List.of());
+                                ProctorWebSocketHandler.this.proctors.getOrDefault(new ExamId(examId), List.of());
                         // TODO: get only the correct proctor
                         for (WebSocketSession proctor : proctors) {
                             sendJsonMessage(proctor, new Message.CandidateJoined(session.getPrincipal().getName()));
                         }
                     }
                 }
-                case RTCMessage.Offer(UUID connectionId, RTCSessionDescription offer) -> {
-                    WebSocketSession proctor = ongoingConnectionRequests.get(connectionId);
-                    if (proctor != null) {
-                        sendJsonMessage(proctor, new Message.CameraStreamOffer(session.getPrincipal().getName(), offer));
+                case RTCMessage.Offer offer -> {
+                    RTCConnection rtcConnection = rtcConnections.get(offer.connectionId());
+                    if (rtcConnection != null) {
+                        sendJsonMessage(rtcConnection.proctor(), offer);
                     }
                 }
-                case RTCMessage.Answer(UUID connectionId, RTCSessionDescription answer) -> {
+                case RTCMessage.Answer answer -> {
+                    RTCConnection rtcConnection = rtcConnections.get(answer.connectionId());
+                    if (rtcConnection != null) {
+                        sendJsonMessage(rtcConnection.proctor(), answer);
+                    }
                 }
-                case RTCMessage.ICECandidate(UUID connectionId, RTCIceCandidate candidate) -> {
-                    WebSocketSession proctor = ongoingConnectionRequests.get(connectionId);
-                    if (proctor != null) {
-                        sendJsonMessage(proctor, new Message.IceCandidate(session.getPrincipal().getName(), candidate));
+                case RTCMessage.ICECandidate iceCandidate -> {
+                    RTCConnection rtcConnection = rtcConnections.get(iceCandidate.connectionId());
+                    if (rtcConnection != null) {
+                        sendJsonMessage(rtcConnection.proctor(), iceCandidate);
                     }
                 }
             }
