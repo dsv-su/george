@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 type WebRTCOptions = RTCConfiguration & {
   sendOffer: (offer: RTCSessionDescriptionInit) => void | Promise<void>;
@@ -18,7 +18,11 @@ export function useWebRTC(options: WebRTCOptions): WebRTCHook {
   // used for the "Perfect negotiation" pattern (https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation)
   const makingOffer = useRef(false);
 
-  const connectionRef = useRef<RTCPeerConnection>(null);
+  const connectionRef = useRef<RTCPeerConnection | null>(null);
+
+  const getConnection = useCallback(() => {
+    return connectionRef.current!;
+  }, []);
 
   const offerReceived = async (offer: RTCSessionDescriptionInit, polite: boolean) => {
     const connection = connectionRef.current!;
@@ -45,7 +49,6 @@ export function useWebRTC(options: WebRTCOptions): WebRTCHook {
 
   useEffect(() => {
     const connection = new RTCPeerConnection(options);
-    // @ts-ignore
     connectionRef.current = connection;
 
     const onnegotiationneeded = async () => {
@@ -72,10 +75,10 @@ export function useWebRTC(options: WebRTCOptions): WebRTCHook {
       connection.removeEventListener('icecandidate', onicecandidate);
       connection.close();
     };
-  }, []);
+  }, [options]);
 
   return {
-    connection: () => connectionRef.current!,
+    connection: getConnection,
     offerReceived,
     answerReceived,
     candidateReceived,

@@ -21,25 +21,25 @@ export default function useCandidateWebSocket({ onMessage }: { onMessage: (messa
     share: true,
     onMessage: (event) => {
       try {
-        let message = JSON.parse(event.data) as InboundMessage;
+        const message = JSON.parse(event.data) as InboundMessage;
         onMessage(message);
       } catch (e) {
         console.log('Invalid message', event.data, e);
       }
     },
-    onReconnectStop: (_) => false,
-    shouldReconnect: (_) => true,
+    onReconnectStop: () => false,
+    shouldReconnect: () => true,
   };
 
   const path = 'ws/candidate';
-  let ws = useWebSocket(`${origin}${import.meta.env.BASE_URL}${path}`, opts);
+  const { readyState, sendJsonMessage } = useWebSocket(`${origin}${import.meta.env.BASE_URL}${path}`, opts);
 
   const sendMessage = useCallback(
     (outboundMessage: OutboundMessage) => {
-      ws.sendJsonMessage(outboundMessage);
+      sendJsonMessage(outboundMessage);
     },
-    [ws.sendJsonMessage],
+    [sendJsonMessage],
   );
 
-  return { readyState: ws.readyState, sendJsonMessage: sendMessage };
+  return { readyState: readyState, sendJsonMessage: sendMessage };
 }

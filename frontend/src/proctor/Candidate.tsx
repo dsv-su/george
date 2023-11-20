@@ -41,7 +41,7 @@ const Candidate = (props: CandidateProps) => {
 };
 
 function LiveView({ id }: { id: string }) {
-  const rtc = useProctorRTC({ id });
+  const { connection } = useProctorRTC({ id });
   const [streams, setStreams] = useState<MediaStream[]>([]);
 
   useEffect(() => {
@@ -56,11 +56,11 @@ function LiveView({ id }: { id: string }) {
         return [...existing, event.streams[0]];
       });
     };
-    rtc.connection().addEventListener('track', ontrack);
+    connection().addEventListener('track', ontrack);
     return () => {
-      rtc.connection().removeEventListener('track', ontrack);
+      connection().removeEventListener('track', ontrack);
     };
-  }, []);
+  }, [connection]);
 
   return (
     <div>
