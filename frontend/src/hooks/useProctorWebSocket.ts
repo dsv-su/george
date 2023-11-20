@@ -51,7 +51,8 @@ export default function useProctorWebSocket({ onMessage }: { onMessage: (message
     shouldReconnect: (_) => true,
   };
 
-  let ws = useWebSocket(`${origin}/ws/proctor`, opts);
+  const path = 'ws/proctor';
+  let ws = useWebSocket(`${origin}${import.meta.env.BASE_URL}${path}`, opts);
 
   const sendMessage = useCallback(
     (outboundMessage: OutboundMessage) => {

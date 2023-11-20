@@ -31,7 +31,8 @@ export default function useCandidateWebSocket({ onMessage }: { onMessage: (messa
     shouldReconnect: (_) => true,
   };
 
-  let ws = useWebSocket(`${origin}/ws/candidate`, opts);
+  const path = 'ws/candidate';
+  let ws = useWebSocket(`${origin}${import.meta.env.BASE_URL}${path}`, opts);
 
   const sendMessage = useCallback(
     (outboundMessage: OutboundMessage) => {
