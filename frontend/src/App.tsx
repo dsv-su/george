@@ -8,7 +8,7 @@ import Test2 from './Test2.tsx';
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route index={true} element={<Index />} />
         <Route path={'/proctor/:examId'} element={<Proctor />} />
