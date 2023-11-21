@@ -48,7 +48,16 @@ export function useWebRTC(options: WebRTCOptions): WebRTCHook {
   };
 
   useEffect(() => {
-    const connection = new RTCPeerConnection(options);
+    const connection = new RTCPeerConnection({
+      iceServers: [
+        {
+          urls: 'stun:stun.l.google.com:19302',
+        },
+        {
+          urls: 'stun:stun3.l.google.com:19305',
+        },
+      ],
+    });
     connectionRef.current = connection;
 
     const onnegotiationneeded = async () => {
