@@ -40,7 +40,7 @@ const Proctor = () => {
         exam_id: examId!,
       });
     }
-  }, [readyState, sendJsonMessage, examId]);
+  }, [readyState, sendJsonMessage]);
 
   return (
     <>

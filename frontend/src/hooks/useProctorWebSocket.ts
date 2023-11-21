@@ -41,25 +41,25 @@ export default function useProctorWebSocket({ onMessage }: { onMessage: (message
     share: true,
     onMessage: (event) => {
       try {
-        const message = JSON.parse(event.data) as InboundMessage;
+        let message = JSON.parse(event.data) as InboundMessage;
         onMessage(message);
       } catch (e) {
         console.log('Invalid message', event.data, e);
       }
     },
-    onReconnectStop: () => false,
-    shouldReconnect: () => true,
+    onReconnectStop: (_) => false,
+    shouldReconnect: (_) => true,
   };
 
   const path = 'ws/proctor';
-  const { readyState, sendJsonMessage } = useWebSocket(`${origin}${import.meta.env.BASE_URL}${path}`, opts);
+  let ws = useWebSocket(`${origin}${import.meta.env.BASE_URL}${path}`, opts);
 
   const sendMessage = useCallback(
     (outboundMessage: OutboundMessage) => {
-      sendJsonMessage(outboundMessage);
+      ws.sendJsonMessage(outboundMessage);
     },
-    [sendJsonMessage],
+    [ws.sendJsonMessage],
   );
 
-  return { readyState: readyState, sendJsonMessage: sendMessage };
+  return { readyState: ws.readyState, sendJsonMessage: sendMessage };
 }
