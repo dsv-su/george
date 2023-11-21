@@ -108,22 +108,10 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
                     sendJsonMessage(candidate, new Message.ConnectionRequest(connectionId));
                 }
             }
-            case RTCMessage.Answer answer -> {
-                RTCConnection rtcConnection = rtcConnections.get(answer.connectionId());
+            case RTCMessage rtcMessage -> {
+                RTCConnection rtcConnection = rtcConnections.get(rtcMessage.connectionId());
                 if (rtcConnection != null) {
-                    sendJsonMessage(rtcConnection.candidate(), answer);
-                }
-            }
-            case RTCMessage.ICECandidate iceCandidate -> {
-                RTCConnection rtcConnection = rtcConnections.get(iceCandidate.connectionId());
-                if (rtcConnection != null) {
-                    sendJsonMessage(rtcConnection.candidate(), iceCandidate);
-                }
-            }
-            case RTCMessage.Offer offer -> {
-                RTCConnection rtcConnection = rtcConnections.get(offer.connectionId());
-                if (rtcConnection != null) {
-                    sendJsonMessage(rtcConnection.candidate(), offer);
+                    sendJsonMessage(rtcConnection.candidate(), rtcMessage);
                 }
             }
         }
@@ -196,22 +184,10 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
                         }
                     }
                 }
-                case RTCMessage.Offer offer -> {
-                    RTCConnection rtcConnection = rtcConnections.get(offer.connectionId());
+                case RTCMessage rtcMessage -> {
+                    RTCConnection rtcConnection = rtcConnections.get(rtcMessage.connectionId());
                     if (rtcConnection != null) {
-                        sendJsonMessage(rtcConnection.proctor(), offer);
-                    }
-                }
-                case RTCMessage.Answer answer -> {
-                    RTCConnection rtcConnection = rtcConnections.get(answer.connectionId());
-                    if (rtcConnection != null) {
-                        sendJsonMessage(rtcConnection.proctor(), answer);
-                    }
-                }
-                case RTCMessage.ICECandidate iceCandidate -> {
-                    RTCConnection rtcConnection = rtcConnections.get(iceCandidate.connectionId());
-                    if (rtcConnection != null) {
-                        sendJsonMessage(rtcConnection.proctor(), iceCandidate);
+                        sendJsonMessage(rtcConnection.proctor(), rtcMessage);
                     }
                 }
             }
