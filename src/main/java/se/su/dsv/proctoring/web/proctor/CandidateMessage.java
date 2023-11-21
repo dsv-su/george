@@ -3,8 +3,8 @@ package se.su.dsv.proctoring.web.proctor;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import se.su.dsv.proctoring.services.ExamId;
+
+import java.util.UUID;
 
 public class CandidateMessage {
     private CandidateMessage() {
@@ -23,5 +23,23 @@ public class CandidateMessage {
     {
         record Joined(@JsonProperty("exam_id") String examId) implements Inbound {}
 
+    }
+
+    /**
+     * All outbound messages bound for a candidate.
+     */
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+    @JsonSubTypes({
+            @JsonSubTypes.Type(value = Outbound.ConnectionRequest.class, name = "connection_request"),
+    })
+    public sealed interface Outbound
+    {
+        /**
+         * A request for a new WebRTC connection to be established containing
+         * all the streams the candidate shares.
+         *
+         * @param id unique identifier for this connection
+         */
+        record ConnectionRequest(@JsonProperty("connection_id") UUID id) implements Outbound {}
     }
 }

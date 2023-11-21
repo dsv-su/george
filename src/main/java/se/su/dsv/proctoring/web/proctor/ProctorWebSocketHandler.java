@@ -105,7 +105,7 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
                     UUID connectionId = UUID.randomUUID();
                     rtcConnections.put(connectionId, new RTCConnection(session, candidate));
                     sendJsonMessage(session, new Message.ConnectionEstablished(connectionId, connectCandidate.principalName()));
-                    sendJsonMessage(candidate, new Message.ConnectionRequest(connectionId));
+                    sendJsonMessage(candidate, new CandidateMessage.Outbound.ConnectionRequest(connectionId));
                 }
             }
             case RTCMessage rtcMessage -> {
@@ -128,6 +128,16 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
     }
 
     private void sendJsonMessage(WebSocketSession session, RTCMessage message)
+            throws IOException
+    {
+        if (session.isOpen()) {
+            String payload = objectMapper.writeValueAsString(message);
+            System.out.println("\u001B[34m>>> " + payload + "\u001B[0m");
+            session.sendMessage(new TextMessage(payload));
+        }
+    }
+
+    private void sendJsonMessage(WebSocketSession session, CandidateMessage.Outbound message)
             throws IOException
     {
         if (session.isOpen()) {
