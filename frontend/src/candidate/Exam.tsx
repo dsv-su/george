@@ -66,17 +66,17 @@ const Exam = () => {
 };
 
 function Stream({ streamId, userMedia, displayMedia }: { streamId: string; userMedia: MediaStream; displayMedia: MediaStream }) {
-  const rtc = useCandidateRTC({ id: streamId });
+  const { connection } = useCandidateRTC({ id: streamId });
 
   useEffect(() => {
     for (const track of userMedia.getTracks()) {
       console.log('adding track');
-      rtc.connection().addTrack(track, userMedia);
+      connection().addTrack(track, userMedia);
     }
     for (const track of displayMedia.getTracks()) {
-      rtc.connection().addTrack(track, displayMedia);
+      connection().addTrack(track, displayMedia);
     }
-  }, []);
+  }, [connection, userMedia, displayMedia]);
 
   return <>{streamId}</>;
 }
