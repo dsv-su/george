@@ -32,6 +32,13 @@ const Candidate = (props: CandidateProps) => {
     }
   }
 
+  useEffect(() => {
+    sendJsonMessage({
+      type: 'connect_candidate',
+      principal: props.candidate,
+    });
+  }, [props.candidate, sendJsonMessage]);
+
   return (
     <div className="candidate">
       <h1>{props.candidate}</h1>
