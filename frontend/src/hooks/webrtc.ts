@@ -51,10 +51,9 @@ export function useWebRTC(options: WebRTCOptions): WebRTCHook {
     const connection = new RTCPeerConnection({
       iceServers: [
         {
-          urls: 'stun:stun.l.google.com:19302',
-        },
-        {
-          urls: 'stun:stun3.l.google.com:19305',
+          urls: 'turn:coturn-test.dsv.su.se:3478',
+          username: 'username1',
+          credential: 'password1',
         },
       ],
     });
