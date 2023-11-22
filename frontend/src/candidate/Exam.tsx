@@ -25,10 +25,13 @@ const Exam = () => {
 
   const { sendJsonMessage } = useCandidateWebSocket({ onMessage });
 
-  async function captureMedia() {
+  async function captureCamera() {
     const userMedia = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-    const displayMedia = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: true });
     setUserMedia(userMedia);
+  }
+
+  async function captureScreen() {
+    const displayMedia = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: true });
     setDisplayMedia(displayMedia);
   }
 
@@ -44,7 +47,8 @@ const Exam = () => {
   if (userMedia === undefined || displayMedia === undefined) {
     return (
       <>
-        <button onClick={captureMedia}>Capture Media</button>
+        <button onClick={captureScreen}>Share screen</button>
+        <button onClick={captureCamera}>Share camera</button>
       </>
     );
   }
