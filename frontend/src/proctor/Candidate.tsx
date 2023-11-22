@@ -33,10 +33,10 @@ const Candidate = (props: CandidateProps) => {
   }
 
   return (
-    <h1>
-      {props.candidate}
-      {connectionId && <LiveView key={connectionId} id={connectionId} />}
-    </h1>
+    <div className="candidate">
+      <h1>{props.candidate}</h1>
+      <div className="media">{connectionId && <LiveView key={connectionId} id={connectionId} />}</div>
+    </div>
   );
 };
 

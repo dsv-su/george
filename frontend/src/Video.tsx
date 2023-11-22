@@ -9,5 +9,5 @@ export default function Video({ stream }: { stream: MediaStream }) {
     }
   }, [stream]);
 
-  return <video ref={video} autoPlay style={{ maxWidth: '640px' }}></video>;
+  return <video ref={video} autoPlay></video>;
 }

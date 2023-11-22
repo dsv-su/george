@@ -47,9 +47,11 @@ const Proctor = () => {
       {examId} ({examInfo})
       <br />
       {readyState}
-      {candidates.map((candidate) => (
-        <Candidate key={candidate} candidate={candidate} />
-      ))}
+      <div className="candidates">
+        {candidates.map((candidate) => (
+          <Candidate key={candidate} candidate={candidate} />
+        ))}
+      </div>
     </>
   );
 };
