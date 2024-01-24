@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import useCandidateWebSocket, { InboundMessage } from '../hooks/useCandidateWebSocket.ts';
 import useCandidateRTC from '../hooks/useCandidateRTC.ts';
 
+const MAX_CONNECTIONS = 3;
+
 const Exam = () => {
   const [userMedia, setUserMedia] = useState<MediaStream>();
   const [displayMedia, setDisplayMedia] = useState<MediaStream>();
@@ -18,7 +20,7 @@ const Exam = () => {
     console.log(message);
     switch (message.type) {
       case 'connection_request':
-        setConnections((existing) => [...existing, message.connection_id]);
+        setConnections((existing) => [message.connection_id, ...existing].slice(0, MAX_CONNECTIONS));
         break;
     }
   }
