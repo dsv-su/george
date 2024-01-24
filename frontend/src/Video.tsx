@@ -9,16 +9,5 @@ export default function Video({ stream }: { stream: MediaStream }) {
     }
   }, [stream]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (video.current !== null && video.current.paused) {
-        void video.current.play();
-      }
-    }, 1000);
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
-
-  return <video ref={video} autoPlay></video>;
+  return <video ref={video} controls></video>;
 }
