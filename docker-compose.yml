@@ -1,0 +1,46 @@
+services:
+  george-backend:
+    profiles:
+      - backend
+    build: .
+    container_name: george-backend
+    volumes:
+      - ./src:/george/src # for live reload
+      - ./target:/george/target # for live reload
+    depends_on:
+      - george-backend-db
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_USER: "george"
+      DATABASE_PASSWORD: "george"
+      DATABASE_NAME: "george"
+      DATABASE_HOST: "george-backend-db"
+      DATABASE_PORT: "3306"
+
+  george-backend-db:
+    profiles:
+      - backend
+    image: mariadb:latest
+    container_name: george-backend-db
+    ports:
+      - "43306:3306" # to not conflict with local mariadb
+    environment:
+      MARIADB_RANDOM_ROOT_PASSWORD: "yes"
+      MARIADB_ROOT_HOST: "localhost"
+      MARIADB_USER: "george"
+      MARIADB_PASSWORD: "george"
+      MARIADB_DATABASE: "george"
+
+  george-frontend:
+    profiles:
+      - frontend
+    build: ./frontend
+    container_name: george-frontend
+    ports:
+      - "5173:5173"
+    environment:
+        VITE_API_BASE_URL: "http://george-backend:8080"
+        VITE_USE_POLLING: "true"
+    volumes:
+      - ./frontend/src:/app/src # for live reload
