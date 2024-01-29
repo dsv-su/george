@@ -1,0 +1,5 @@
+# Docker requires the line endings to be LF to execute the Maven wrapper script
+# If the repository is checked out on a system with core.autocrlf set to true
+# it may change the line endings to something different causing the Docker
+# build to fail. Force specific line endings on the mvnw script to fix.
+mvnw text eol=lf
