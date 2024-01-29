@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import './App.css';
 import Api from './api';
 import { useFetch } from './fetch.ts';
 import { Exam } from './proctor.ts';
