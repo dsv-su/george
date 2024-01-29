@@ -46,27 +46,41 @@ const Exam = () => {
     }
   }, [userMedia, displayMedia]);
 
-  if (userMedia === undefined || displayMedia === undefined) {
-    return (
-      <>
-        <button onClick={captureScreen}>Share screen</button>
-        <button onClick={captureCamera}>Share camera</button>
-      </>
-    );
-  }
-
   const join = async () => {
     sendJsonMessage({ type: 'candidate_joined', exam_id: examId! });
   };
 
   return (
     <>
-      <button onClick={join}>Join exam</button>
+      <h1>[Exam title]</h1>
+      <p>
+        To start taking the exam you first have to share your camera and screen. Follow the instructions below, and once connected, wait for
+        the proctor to give you further instructions via chat or audio.
+      </p>
+      <ol>
+        <li>
+          Share your camera and microphone by clicking the button below. You will be asked to give permission to use your camera and
+          microphone.
+          <button onClick={captureCamera}>Share camera and microphone</button>
+        </li>
+        <li aria-disabled={userMedia === undefined}>
+          Share your screen by clicking the button below. You will be asked to give permission to share your screen.
+          <button onClick={captureScreen} disabled={userMedia === undefined}>
+            Share screen
+          </button>
+        </li>
+        <li aria-disabled={displayMedia === undefined}>
+          Click the button below to join the exam.
+          <button onClick={join} disabled={displayMedia === undefined}>
+            Join exam
+          </button>
+        </li>
+      </ol>
       <video ref={userVideo} autoPlay={true} style={{ maxWidth: '1600px' }}></video>
       <video ref={displayVideo} autoPlay={true} style={{ maxWidth: '1600px' }}></video>
-      {connections.map((id) => (
-        <Stream key={id} streamId={id} userMedia={userMedia} displayMedia={displayMedia} />
-      ))}
+      {userMedia &&
+        displayMedia &&
+        connections.map((id) => <Stream key={id} streamId={id} userMedia={userMedia} displayMedia={displayMedia} />)}
     </>
   );
 };
