@@ -10,6 +10,7 @@ services:
     depends_on:
       - george-backend-db
     ports:
+      - "8000:8000" # JVM debug port
       - "8080:8080"
     environment:
       DATABASE_USER: "george"
