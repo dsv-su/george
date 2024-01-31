@@ -6,6 +6,14 @@ spring:
           su:
             authorization-grant-type: authorization_code
             redirect-uri: "{baseUrl}/{action}/oauth2/code/{registrationId}"
+            client-id: ${OAUTH2_CLIENT_ID}
+            client-secret: ${OAUTH2_CLIENT_SECRET}
+        provider:
+          su:
+            authorization-uri: ${OAUTH2_AUTHORIZATION_URI}
+            token-uri: ${OAUTH2_TOKEN_URI}
+            user-info-uri: ${OAUTH2_USER_INFO_URI}
+            user-name-attribute: sub
   profiles:
     include: local
   mvc:

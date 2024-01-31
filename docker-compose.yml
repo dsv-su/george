@@ -17,6 +17,11 @@ services:
       DATABASE_NAME: "george"
       DATABASE_HOST: "george-backend-db"
       DATABASE_PORT: "3306"
+      OAUTH2_AUTHORIZATION_URI: "http://localhost:5002/authorize"
+      OAUTH2_TOKEN_URI: "http://oauth2:8080/exchange"
+      OAUTH2_USER_INFO_URI: "http://oauth2:8080/verify"
+      OAUTH2_CLIENT_ID: george
+      OAUTH2_CLIENT_SECRET: ge0rg3
 
   george-backend-db:
     profiles:
@@ -44,3 +49,16 @@ services:
         VITE_USE_POLLING: "true"
     volumes:
       - ./frontend/src:/app/src # for live reload
+  oauth2:
+    container_name: george-oauth2
+    profiles:
+      - backend
+    build:
+      context: https://github.com/dsv-su/toker.git#standalone-docker-image
+      dockerfile: embedded.Dockerfile
+    ports:
+      - "5002:8080"
+    environment:
+      CLIENT_ID: george
+      CLIENT_SECRET: ge0rg3
+      CLIENT_REDIRECT_URI: http://localhost:8080/login/oauth2/code/su
