@@ -13,6 +13,10 @@ import java.util.UUID;
         @JsonSubTypes.Type(value = RTCMessage.Offer.class, name = "rtc_offer"),
 })
 public interface RTCMessage {
+    /**
+     * The unique identifier for the connection this message is bound for.
+     * @return the connection id
+     */
     UUID connectionId();
 
     record Offer(

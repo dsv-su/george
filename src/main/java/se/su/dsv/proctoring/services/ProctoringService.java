@@ -6,8 +6,19 @@ import java.util.Objects;
 import java.util.Optional;
 
 public interface ProctoringService {
+    /**
+     * Returns the exams the given principal should proctor.
+     * @param principal the proctor
+     * @return the exams the given principal should proctor.
+     */
     List<Exam> examsToProctor(Principal principal);
 
+    /**
+     * Returns the exam with the given id if the given principal should proctor it.
+     * @param examId the exam id
+     * @param principal the proctor
+     * @return the exam with the given id if the given principal should proctor it.
+     */
     default Optional<Exam> getProctorableExam(ExamId examId, Principal principal) {
         for (Exam exam : examsToProctor(principal)) {
             if (Objects.equals(exam.id(), examId)) {

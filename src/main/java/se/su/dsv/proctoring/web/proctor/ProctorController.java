@@ -13,13 +13,18 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/proctor")
-public class ProctorController {
+public final class ProctorController {
     private final ProctoringService proctoringService;
 
     public ProctorController(final ProctoringService proctoringService) {
         this.proctoringService = proctoringService;
     }
 
+    /**
+     * Returns the exams the given principal should proctor.
+     * @param principal the currently logged-in user
+     * @return the exams the given principal should proctor.
+     */
     @GetMapping("list")
     public List<Exam> listExamsToProctor(@AuthenticationPrincipal Principal principal) {
         return proctoringService.examsToProctor(principal)

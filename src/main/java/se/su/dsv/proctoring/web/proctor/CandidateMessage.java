@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import java.util.UUID;
 
-public class CandidateMessage {
+public final class CandidateMessage {
     private CandidateMessage() {
         throw new IllegalStateException("Used as namespace");
     }
@@ -32,8 +32,7 @@ public class CandidateMessage {
     @JsonSubTypes({
             @JsonSubTypes.Type(value = Outbound.ConnectionRequest.class, name = "connection_request"),
     })
-    public sealed interface Outbound
-    {
+    public sealed interface Outbound {
         /**
          * A request for a new WebRTC connection to be established containing
          * all the streams the candidate shares.

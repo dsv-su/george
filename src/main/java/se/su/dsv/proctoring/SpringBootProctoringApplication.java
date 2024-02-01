@@ -1,7 +1,6 @@
 package se.su.dsv.proctoring;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.Customizer;
@@ -16,11 +15,6 @@ import se.su.dsv.proctoring.web.proctor.ProctorWebSocketHandler;
 @SpringBootApplication
 @EnableWebSocket
 public class SpringBootProctoringApplication {
-
-    public static void main(String[] args) {
-        SpringApplication.run(SpringBootProctoringApplication.class, args);
-    }
-
     /**
      * Require OAuth2 login for the entire application.
      *

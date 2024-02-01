@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import java.util.UUID;
-
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = InboundMessage.ProctorExamination.class, name = "proctor_examination"),
@@ -27,7 +25,6 @@ public sealed interface InboundMessage
     /**
      * The proctor wants to connect to a candidate.
      * @param principalName the candidate to connect to
-     * @param offer the proctor's WebRTC offer
      */
     record ConnectCandidate(
             @JsonProperty("principal") String principalName)

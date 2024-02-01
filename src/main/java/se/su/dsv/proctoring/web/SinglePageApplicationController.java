@@ -1,9 +1,7 @@
 package se.su.dsv.proctoring.web;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * Support using path based routing for the single page application (SPA) by
