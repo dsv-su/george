@@ -29,7 +29,7 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
     private final ProctoringService proctoringService;
     private final ObjectMapper objectMapper;
 
-    private Map<ExamId, Collection<WebSocketSession>> proctors = new ConcurrentHashMap<>();
+    private Map<ExamId, Collection<WebSocketSession>> proctorsPerExam = new ConcurrentHashMap<>();
 
     private Map<PrincipalName, WebSocketSession> connectedProctors = new ConcurrentHashMap<>();
     private Map<PrincipalName, WebSocketSession> connectedCandidates = new ConcurrentHashMap<>();
@@ -54,7 +54,7 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        for (Collection<WebSocketSession> proctors : proctors.values()) {
+        for (Collection<WebSocketSession> proctors : proctorsPerExam.values()) {
             proctors.remove(session);
         }
         if (session.getPrincipal() != null) {
@@ -81,8 +81,9 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
     {
         assert session.getPrincipal() != null; // type hint for IntelliJ
         switch (inboundMessage) {
-            case InboundMessage.ProctorExamination(String examId) -> {
-                Optional<Exam> maybeExam = proctoringService.getProctorableExam(new ExamId(examId), session.getPrincipal());
+            case InboundMessage.ProctorExamination(String examIdAsString) -> {
+                ExamId examId = new ExamId(examIdAsString);
+                Optional<Exam> maybeExam = proctoringService.getProctorableExam(examId, session.getPrincipal());
                 if (maybeExam.isPresent()) {
                     Message message = new Message.ExamInfo(maybeExam.get().title());
                     sendJsonMessage(session, message);
@@ -92,19 +93,18 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
                     for (Candidate candidate : candidates) {
                         sendJsonMessage(session, new Message.Candidate(candidate.username().principalName()));
                     }
-                    proctors.putIfAbsent(new ExamId(examId), new ConcurrentLinkedQueue<>());
-                    proctors.get(new ExamId(examId)).add(session);
-                }
-                else {
+                    proctorsPerExam.putIfAbsent(examId, new ConcurrentLinkedQueue<>());
+                    proctorsPerExam.get(examId).add(session);
+                } else {
                     session.sendMessage(ACCESS_DENIED);
                 }
             }
-            case InboundMessage.ConnectCandidate connectCandidate -> {
-                WebSocketSession candidate = connectedCandidates.get(new PrincipalName(connectCandidate.principalName()));
+            case InboundMessage.ConnectCandidate(String principalName) -> {
+                WebSocketSession candidate = connectedCandidates.get(new PrincipalName(principalName));
                 if (candidate != null) {
                     UUID connectionId = UUID.randomUUID();
                     rtcConnections.put(connectionId, new RTCConnection(session, candidate));
-                    sendJsonMessage(session, new Message.ConnectionEstablished(connectionId, connectCandidate.principalName()));
+                    sendJsonMessage(session, new Message.ConnectionEstablished(connectionId, principalName));
                     sendJsonMessage(candidate, new CandidateMessage.Outbound.ConnectionRequest(connectionId));
                 }
             }
@@ -172,7 +172,8 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
             String payload = message.getPayload();
             System.out.println("\u001B[31m<<< " + payload + "\u001B[0m");
             try {
-                CandidateMessage.Inbound inboundMessage = objectMapper.readValue(payload, CandidateMessage.Inbound.class);
+                CandidateMessage.Inbound inboundMessage
+                        = objectMapper.readValue(payload, CandidateMessage.Inbound.class);
                 handleInboundMessage(session, inboundMessage);
             } catch (JsonProcessingException e) {
                 session.sendMessage(INVALID_MESSAGE);
@@ -184,10 +185,11 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
         {
             assert session.getPrincipal() != null; // type hint for IntelliJ, enforced on connection opened
             switch (inboundMessage) {
-                case CandidateMessage.Inbound.Joined(String examId) -> {
-                    if (canTake(new ExamId(examId), session.getPrincipal())) {
+                case CandidateMessage.Inbound.Joined(String examIdAsString) -> {
+                    ExamId examId = new ExamId(examIdAsString);
+                    if (canTake(examId, session.getPrincipal())) {
                         Collection<WebSocketSession> proctors =
-                                ProctorWebSocketHandler.this.proctors.getOrDefault(new ExamId(examId), List.of());
+                                ProctorWebSocketHandler.this.proctorsPerExam.getOrDefault(examId, List.of());
                         // TODO: get only the correct proctor
                         for (WebSocketSession proctor : proctors) {
                             sendJsonMessage(proctor, new Message.CandidateJoined(session.getPrincipal().getName()));
