@@ -38,6 +38,7 @@ public class SpringBootProctoringApplication {
     {
         http.oauth2Login(Customizer.withDefaults());
         http.authorizeHttpRequests(authorization -> authorization
+                .requestMatchers("/v3/api-docs").permitAll()
                 .anyRequest().authenticated());
         return http.build();
     }
