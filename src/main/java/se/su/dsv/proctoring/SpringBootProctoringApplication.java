@@ -1,6 +1,8 @@
 package se.su.dsv.proctoring;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.models.media.Schema;
+import org.springdoc.core.utils.SpringDocUtils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +16,7 @@ import se.su.dsv.proctoring.services.Services;
 import se.su.dsv.proctoring.web.proctor.ProctorWebSocketHandler;
 
 import javax.sql.DataSource;
+import java.time.LocalTime;
 
 @SpringBootApplication
 @EnableWebSocket
@@ -24,6 +27,16 @@ public class SpringBootProctoringApplication {
      */
     public static void main(String[] args) {
         SpringApplication.run(SpringBootProctoringApplication.class, args);
+    }
+
+    static {
+        SpringDocUtils config = SpringDocUtils.getConfig();
+        // Configure OpenAPI to use a string format (ISO 8601) for LocalTime
+        config.replaceWithSchema(LocalTime.class, new Schema<>()
+                .type("string")
+                .format("time")
+                .description("ISO 8601 format")
+                .example("14:00:00"));
     }
 
     /**
