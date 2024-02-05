@@ -2,6 +2,10 @@ package se.su.dsv.proctoring;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.testcontainers.containers.MariaDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(
         properties = {
@@ -13,7 +17,12 @@ import org.springframework.boot.test.context.SpringBootTest;
                 "spring.security.oauth2.client.registration.su.client-secret=client-secret",
         }
 )
+@Testcontainers
 class SpringBootProctoringApplicationTests {
+
+    @ServiceConnection
+    @Container
+    private static MariaDBContainer<?> mariaDB = new MariaDBContainer<>("mariadb:latest");
 
     @Test
     void contextLoads() {
