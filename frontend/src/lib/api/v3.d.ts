@@ -4,10 +4,25 @@
  */
 
 export interface paths {
+  '/api/administration/examination': {
+    /**
+     * Schedule a new examination.
+     * @description Schedule a new examination.
+     */
+    post: operations['scheduleNewExamination'];
+  };
   '/api/profile': {
+    /**
+     * Returns the currently logged-in user's profile.
+     * @description Returns the currently logged-in user's profile.
+     */
     get: operations['profile'];
   };
   '/api/proctor/list': {
+    /**
+     * Returns the exams the given principal should proctor.
+     * @description Returns the exams the given principal should proctor.
+     */
     get: operations['listExamsToProctor'];
   };
 }
@@ -16,8 +31,40 @@ export type webhooks = Record<string, never>;
 
 export interface components {
   schemas: {
+    NewExaminationRequest: {
+      title: string;
+      /** Format: date */
+      date: string;
+      /**
+       * Format: time
+       * @description ISO 8601 format
+       * @example 14:00:00
+       */
+      start: string;
+      /**
+       * Format: time
+       * @description ISO 8601 format
+       * @example 14:00:00
+       */
+      end: string;
+    };
+    ProblemDetail: {
+      /** Format: uri */
+      type?: string;
+      title?: string;
+      /** Format: int32 */
+      status?: number;
+      detail?: string;
+      /** Format: uri */
+      instance?: string;
+      properties?: {
+        [key: string]: Record<string, never>;
+      };
+    };
     Exam: {
+      /** @description unique identifier for this exam */
       id: string;
+      /** @description human-readable title that uniquely identifies this exam */
       title: string;
     };
   };
@@ -33,9 +80,39 @@ export type $defs = Record<string, never>;
 export type external = Record<string, never>;
 
 export interface operations {
+  /**
+   * Schedule a new examination.
+   * @description Schedule a new examination.
+   */
+  scheduleNewExamination: {
+    /** @description details about the new examination */
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['NewExaminationRequest'];
+      };
+    };
+    responses: {
+      /** @description Something is wrong with the request, needs fixing before sending again. */
+      400: {
+        content: {
+          '*/*': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description The request was fine, there was just a problem handling it. */
+      500: {
+        content: {
+          '*/*': components['schemas']['ProblemDetail'];
+        };
+      };
+    };
+  };
+  /**
+   * Returns the currently logged-in user's profile.
+   * @description Returns the currently logged-in user's profile.
+   */
   profile: {
     responses: {
-      /** @description OK */
+      /** @description the currently logged-in user's principal name */
       200: {
         content: {
           '*/*': string;
@@ -43,9 +120,13 @@ export interface operations {
       };
     };
   };
+  /**
+   * Returns the exams the given principal should proctor.
+   * @description Returns the exams the given principal should proctor.
+   */
   listExamsToProctor: {
     responses: {
-      /** @description OK */
+      /** @description the exams the given principal should proctor. */
       200: {
         content: {
           '*/*': components['schemas']['Exam'][];
