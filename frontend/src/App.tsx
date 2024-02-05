@@ -4,6 +4,7 @@ import Proctor from './Proctor.tsx';
 import Exam from './candidate/Exam.tsx';
 import Test from './Test.tsx';
 import Test2 from './Test2.tsx';
+import Administration from './administration/administration.tsx';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path={'/candidate/:examId'} element={<Exam />} />
         <Route path={'/test'} element={<Test />} />
         <Route path={'/test2'} element={<Test2 />} />
+        <Route path={'/administration'} element={<Administration />} />
       </Routes>
     </BrowserRouter>
   );

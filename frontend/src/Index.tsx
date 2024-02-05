@@ -45,6 +45,8 @@ function Index() {
           );
         }}
       />
+
+      <Link to="/administration">Administration</Link>
     </>
   );
 }
