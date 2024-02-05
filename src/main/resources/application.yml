@@ -25,3 +25,5 @@ spring:
       fail-on-ignored-properties: true
       fail-on-null-for-primitives: true
       fail-on-unknown-properties: true
+    serialization:
+      write-dates-as-timestamps: false

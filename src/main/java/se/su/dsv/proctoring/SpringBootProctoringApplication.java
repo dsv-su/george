@@ -9,9 +9,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
-import se.su.dsv.proctoring.prototype.FakeData;
 import se.su.dsv.proctoring.services.ProctoringService;
+import se.su.dsv.proctoring.services.Services;
 import se.su.dsv.proctoring.web.proctor.ProctorWebSocketHandler;
+
+import javax.sql.DataSource;
 
 @SpringBootApplication
 @EnableWebSocket
@@ -40,12 +42,13 @@ public class SpringBootProctoringApplication {
         http.authorizeHttpRequests(authorization -> authorization
                 .requestMatchers("/v3/api-docs").permitAll()
                 .anyRequest().authenticated());
+        http.csrf(csrf -> csrf.disable()); // Rely on session cookie SameSite attribute
         return http.build();
     }
 
     @Bean
-    public ProctoringService proctoringService() {
-        return new FakeData();
+    public Services proctoringService(DataSource dataSource) {
+        return new Services(dataSource);
     }
 
     @Bean
