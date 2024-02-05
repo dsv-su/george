@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { DependencyList, useCallback, useEffect, useState } from 'react';
 
 type URI = string;
 
@@ -10,23 +10,27 @@ interface ProblemDetail {
   instance?: URI;
 }
 
-const useFetch = <T>(input: RequestInfo | URL) => {
+const useFetch = <T>(request: () => Promise<{ data?: T; error?: unknown }>, deps: DependencyList) => {
   const [data, setData] = useState<T>();
   const [problem, setProblem] = useState<ProblemDetail>();
   const [error, setError] = useState<Error>();
 
+  // we need to use useCallback to avoid infinite loop since the request function is created every render
+  // done here instead of at call site to make it nicer to use
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const actualRequest = useCallback(request, deps);
+
   useEffect(() => {
     const doFetch = async () => {
-      const response = await fetch(input);
       try {
-        const json = await response.json();
-        if (response.ok) {
-          setData(json);
+        const response = await actualRequest();
+        if (response.data) {
+          setData(response.data);
         } else {
-          setProblem(json);
+          setProblem(response.error as ProblemDetail);
         }
       } catch (e) {
-        console.log('useFetch', input, e);
+        console.log('useFetch', e);
         if (e instanceof Error) {
           setError(e);
         } else {
@@ -36,7 +40,7 @@ const useFetch = <T>(input: RequestInfo | URL) => {
     };
 
     void doFetch();
-  }, [input]);
+  }, [actualRequest]);
 
   return { data, problem, error };
 };

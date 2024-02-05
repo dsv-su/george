@@ -1,23 +1,26 @@
 import { useEffect, useState } from 'react';
-import Api from './api';
 import { useFetch } from './fetch.ts';
 import { Exam } from './proctor.ts';
 import { Fetch } from './fetch-dom.ts';
 import { Link } from 'react-router-dom';
+import createClient from 'openapi-fetch';
+import { paths } from './lib/api/v3';
+
+const { GET } = createClient<paths>();
 
 function Index() {
   const [principal, setPrincipal] = useState<string>();
 
   useEffect(() => {
     async function doFetch() {
-      const response = await fetch(Api.profile);
-      const text = await response.text();
+      const response = await GET('/api/profile', { parseAs: 'text' });
+      const text = response.data;
       setPrincipal(text);
     }
     void doFetch();
   }, []);
 
-  const examsToProctor = useFetch<Exam[]>(Api.listMyExamsToProctor);
+  const examsToProctor = useFetch<Exam[]>(() => GET('/api/proctor/list'), []);
 
   return (
     <>

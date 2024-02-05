@@ -18,6 +18,10 @@ Run backend with `mvnw spring-boot:run` and frontend with `cd frontend && npm ru
 To login, you first have to browse to `http://localhost:8080` and authenticate
 to initialise the Spring session, after you can go access the frontend at `http://localhost:5173`.
 
+### API Specification
+The frontend uses a generated specification from the backend's OpenAPI specification.
+To update it start the application and run `cd frontend && npm run update-api`.
+
 ### Docker
 To run the backend in a docker container, run `docker compose -f docker-compose.yml --profile backend up`.
 To run the frontend in a docker container, use `--profile frontend up`.
