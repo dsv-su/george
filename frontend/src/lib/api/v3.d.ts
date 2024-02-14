@@ -61,6 +61,24 @@ export interface components {
         [key: string]: Record<string, never>;
       };
     };
+    ExaminationDetails: {
+      id: string;
+      title: string;
+      /** Format: date */
+      date: string;
+      /**
+       * Format: time
+       * @description ISO 8601 format
+       * @example 14:00:00
+       */
+      start: string;
+      /**
+       * Format: time
+       * @description ISO 8601 format
+       * @example 14:00:00
+       */
+      end: string;
+    };
     Exam: {
       /** @description unique identifier for this exam */
       id: string;
@@ -92,16 +110,22 @@ export interface operations {
       };
     };
     responses: {
+      /** @description The examination was successfully scheduled. */
+      201: {
+        content: {
+          'application/json': components['schemas']['ExaminationDetails'];
+        };
+      };
       /** @description Something is wrong with the request, needs fixing before sending again. */
       400: {
         content: {
-          '*/*': components['schemas']['ProblemDetail'];
+          'application/json': components['schemas']['ProblemDetail'];
         };
       };
       /** @description The request was fine, there was just a problem handling it. */
       500: {
         content: {
-          '*/*': components['schemas']['ProblemDetail'];
+          'application/json': components['schemas']['ProblemDetail'];
         };
       };
     };

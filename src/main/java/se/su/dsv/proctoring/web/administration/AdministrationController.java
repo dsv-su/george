@@ -8,12 +8,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import se.su.dsv.proctoring.services.Exam;
 import se.su.dsv.proctoring.services.ExaminationAdministrationService;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 @RestController
 @ApiResponse(
@@ -24,7 +26,7 @@ import java.time.ZoneId;
         responseCode = "500",
         description = "The request was fine, there was just a problem handling it.",
         content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
-@RequestMapping("/api/administration")
+@RequestMapping(path = "/api/administration", produces = "application/json", consumes = "application/json")
 public class AdministrationController {
     private final ExaminationAdministrationService examinationAdministrationService;
 
@@ -34,16 +36,27 @@ public class AdministrationController {
 
     /**
      * Schedule a new examination.
+     *
      * @param newExaminationRequest details about the new examination
+     * @return the newly scheduled examination
      */
     @PostMapping("/examination")
-    public void scheduleNewExamination(@RequestBody NewExaminationRequest newExaminationRequest) {
+    @ApiResponse(
+            responseCode = "201",
+            description = "The examination was successfully scheduled.",
+            content = @Content(schema = @Schema(implementation = ExaminationDetails.class)))
+    public ExaminationDetails scheduleNewExamination(@RequestBody NewExaminationRequest newExaminationRequest) {
         var newExamination = new ExaminationAdministrationService.NewExamination(
                 newExaminationRequest.title(),
                 toInstantInDefaultZone(newExaminationRequest.date(), newExaminationRequest.start()),
                 toInstantInDefaultZone(newExaminationRequest.date(), newExaminationRequest.end())
         );
-        examinationAdministrationService.scheduleNewExamination(newExamination);
+        Exam exam = examinationAdministrationService.scheduleNewExamination(newExamination);
+        ZonedDateTime zonedDateTime = exam.start().atZone(ZoneId.systemDefault());
+        LocalDate date = zonedDateTime.toLocalDate();
+        LocalTime start = zonedDateTime.toLocalTime();
+        LocalTime end = exam.end().atZone(ZoneId.systemDefault()).toLocalTime();
+        return new ExaminationDetails(exam.id().asString(), exam.title(), date, start, end);
     }
 
     private static Instant toInstantInDefaultZone(LocalDate date, LocalTime time) {
