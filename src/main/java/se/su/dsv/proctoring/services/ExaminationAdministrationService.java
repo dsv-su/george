@@ -14,6 +14,11 @@ public interface ExaminationAdministrationService {
      */
     Exam scheduleNewExamination(NewExamination newExamination);
 
+    /**
+     * Look up an examination by its id.
+     * @param examinationId the id of the examination
+     * @return the examination, if found
+     */
     Optional<Exam> lookupExamination(String examinationId);
 
     /**

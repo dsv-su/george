@@ -1,8 +1,6 @@
 package se.su.dsv.proctoring.web.administration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import se.su.dsv.proctoring.services.ExamId;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
