@@ -15,6 +15,15 @@ export default function ExaminationListPage() {
   return (
     <div>
       <h1>Examination List</h1>
+      <nav>
+        <ol className="breadcrumb">
+          <li className="breadcrumb-item">
+            <Link to="/administration">{i18n['Administration']}</Link>
+          </li>
+          <li className="breadcrumb-item active">{i18n['Examination']}</li>
+        </ol>
+      </nav>
+      <Link to="/administration/examination/new">{i18n['Schedule new examination']}</Link>
       <Fetch response={examinations}>
         {(examinations) => {
           return (

@@ -61,9 +61,15 @@ const ENGLISH = {
   },
   'Internal server error': 'Unfortunately something went wrong, try again later.',
   'Examination scheduled': 'Examination scheduled',
+  'Schedule new examination': 'Schedule new examination',
+  Cancel: 'Cancel',
+  'Back to list': 'Back to list',
+  Administration: 'Administration',
+  Examination: 'Examination',
 };
 
 const SWEDISH: typeof ENGLISH = {
+  'Schedule new examination': 'Schemalägg ny examination',
   Title(): string {
     throw new Error('Function not implemented.');
   },
@@ -100,6 +106,10 @@ const SWEDISH: typeof ENGLISH = {
   },
   'Internal server error': 'Tyvärr gick något fel, försök igen senare',
   'Examination scheduled': 'Examination schemalagd',
+  Cancel: 'Avbryt',
+  'Back to list': 'Tillbaka till listan',
+  Administration: 'Administration',
+  Examination: 'Examination',
 };
 
 type Language = 'en' | 'sv';

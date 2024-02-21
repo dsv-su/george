@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useFetch } from '../fetch.ts';
 import { components, paths } from '../lib/api/v3';
 import createClient from 'openapi-fetch';
@@ -29,7 +29,17 @@ export default function ExaminationPage() {
   return (
     <>
       <h1>Examination</h1>
-      <p>{examinationId}</p>
+      <nav>
+        <ol className="breadcrumb">
+          <li className="breadcrumb-item">
+            <Link to="/administration">{i18n['Administration']}</Link>
+          </li>
+          <li className="breadcrumb-item">
+            <Link to="/administration/examination">{i18n['Examination']}</Link>
+          </li>
+          <li className="breadcrumb-item active">{examination.data?.title || examinationId}</li>
+        </ol>
+      </nav>
       <Fetch response={examination}>
         {(data) => {
           return (

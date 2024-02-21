@@ -5,7 +5,7 @@ import { useZorm } from 'react-zorm';
 import useI18n from '../hooks/i18n.ts';
 import { input } from '../components/input.tsx';
 import { Feedback, useFeedback } from '../components/feedback.tsx';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const { POST } = createClient<paths>();
 type NewExaminationRequest = components['schemas']['NewExaminationRequest'];
@@ -50,6 +50,17 @@ export default function NewExaminationPage() {
   return (
     <>
       <h2>Schedule new examination</h2>
+      <nav>
+        <ol className="breadcrumb">
+          <li className="breadcrumb-item">
+            <Link to="/administration">{i18n['Administration']}</Link>
+          </li>
+          <li className="breadcrumb-item">
+            <Link to="/administration/examination">{i18n['Examination']}</Link>
+          </li>
+          <li className="breadcrumb-item active">{i18n['Schedule new examination']}</li>
+        </ol>
+      </nav>
       <Feedback {...feedback.messages} />
       <form ref={zo.ref}>
         {zo.fields.title(input('text', i18n.Title(), i18n.badTitle))}
@@ -58,6 +69,7 @@ export default function NewExaminationPage() {
         {zo.fields.end(input('time', i18n.End(), i18n.badEnd))}
 
         <button type="submit">{i18n.ScheduleExamination()}</button>
+        <Link to={'/administration/examination'}>{i18n['Cancel']}</Link>
       </form>
     </>
   );
