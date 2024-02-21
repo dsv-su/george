@@ -1,5 +1,6 @@
 package se.su.dsv.proctoring.web.administration;
 
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -18,6 +19,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -72,6 +74,22 @@ public class AdministrationController {
     public Optional<ExaminationDetails> getExaminationDetails(@PathVariable("examinationId") String examinationId) {
         Optional<Exam> exam = examinationAdministrationService.lookupExamination(examinationId);
         return exam.map(AdministrationController::toExaminationDetails);
+    }
+
+    /**
+     * Returns all the scheduled examinations.
+     * @return a list of all the scheduled examinations
+     */
+    @GetMapping(value = "/examination", consumes = "*/*")
+    @ApiResponse(
+            responseCode = "200",
+            description = "The examinations were found.",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = ExaminationDetails.class))))
+    public List<ExaminationDetails> listExaminations() {
+        return examinationAdministrationService.listExaminations()
+                .stream()
+                .map(AdministrationController::toExaminationDetails)
+                .toList();
     }
 
     private static ExaminationDetails toExaminationDetails(Exam e) {

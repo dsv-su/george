@@ -1,6 +1,7 @@
 package se.su.dsv.proctoring.services;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 public interface ExaminationAdministrationService {
@@ -14,4 +15,10 @@ public interface ExaminationAdministrationService {
     Exam scheduleNewExamination(NewExamination newExamination);
 
     Optional<Exam> lookupExamination(String examinationId);
+
+    /**
+     * List all examinations.
+     * @return a list of all examinations
+     */
+    List<Exam> listExaminations();
 }

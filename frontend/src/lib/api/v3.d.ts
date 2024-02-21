@@ -6,6 +6,11 @@
 export interface paths {
   '/api/administration/examination': {
     /**
+     * Returns all the scheduled examinations.
+     * @description Returns all the scheduled examinations.
+     */
+    get: operations['listExaminations'];
+    /**
      * Schedule a new examination.
      * @description Schedule a new examination.
      */
@@ -105,6 +110,32 @@ export type $defs = Record<string, never>;
 export type external = Record<string, never>;
 
 export interface operations {
+  /**
+   * Returns all the scheduled examinations.
+   * @description Returns all the scheduled examinations.
+   */
+  listExaminations: {
+    responses: {
+      /** @description The examinations were found. */
+      200: {
+        content: {
+          'application/json': components['schemas']['ExaminationDetails'][];
+        };
+      };
+      /** @description Something is wrong with the request, needs fixing before sending again. */
+      400: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description The request was fine, there was just a problem handling it. */
+      500: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+    };
+  };
   /**
    * Schedule a new examination.
    * @description Schedule a new examination.

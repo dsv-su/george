@@ -4,6 +4,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 
 import javax.sql.DataSource;
 import java.security.Principal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,13 +27,7 @@ public class Services implements ExaminationAdministrationService, ProctoringSer
                 WHERE proctors.principal = :proctor
                 """)
                 .param("proctor", principal.getName())
-                .query((rs, rowNum) -> {
-                    var id = new ExamId(rs.getString("id"));
-                    var name = rs.getString("name");
-                    var start = rs.getTimestamp("start").toInstant();
-                    var end = rs.getTimestamp("end").toInstant();
-                    return new Exam(id, name, start, end);
-                })
+                .query(Services::mapToExam)
                 .list();
     }
 
@@ -63,13 +59,27 @@ public class Services implements ExaminationAdministrationService, ProctoringSer
                 WHERE id = :id
                 """)
                 .param("id", examinationId)
-                .query((rs, rowNum) -> {
-                    var id = new ExamId(rs.getString("id"));
-                    var name = rs.getString("name");
-                    var start = rs.getTimestamp("start").toInstant();
-                    var end = rs.getTimestamp("end").toInstant();
-                    return new Exam(id, name, start, end);
-                })
+                .query(Services::mapToExam)
                 .optional();
+    }
+
+    @Override
+    public List<Exam> listExaminations() {
+        return jdbc.sql("""
+                SELECT *
+                FROM exams
+                """)
+                .query(Services::mapToExam)
+                .list();
+    }
+
+    private static Exam mapToExam(ResultSet rs, int rowNum)
+            throws SQLException
+    {
+        var id = new ExamId(rs.getString("id"));
+        var name = rs.getString("name");
+        var start = rs.getTimestamp("start").toInstant();
+        var end = rs.getTimestamp("end").toInstant();
+        return new Exam(id, name, start, end);
     }
 }
