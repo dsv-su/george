@@ -25,6 +25,13 @@ export interface paths {
      */
     get: operations['listExamsToProctor'];
   };
+  '/api/administration/examination/{examinationId}': {
+    /**
+     * Get details about a specific examination.
+     * @description Get details about a specific examination.
+     */
+    get: operations['getExaminationDetails'];
+  };
 }
 
 export type webhooks = Record<string, never>;
@@ -154,6 +161,38 @@ export interface operations {
       200: {
         content: {
           '*/*': components['schemas']['Exam'][];
+        };
+      };
+    };
+  };
+  /**
+   * Get details about a specific examination.
+   * @description Get details about a specific examination.
+   */
+  getExaminationDetails: {
+    parameters: {
+      path: {
+        /** @description the id of the examination */
+        examinationId: string;
+      };
+    };
+    responses: {
+      /** @description The examination was found. */
+      200: {
+        content: {
+          'application/json': components['schemas']['ExaminationDetails'];
+        };
+      };
+      /** @description Something is wrong with the request, needs fixing before sending again. */
+      400: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description The request was fine, there was just a problem handling it. */
+      500: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
         };
       };
     };

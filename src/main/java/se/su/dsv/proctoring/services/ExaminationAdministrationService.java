@@ -1,6 +1,7 @@
 package se.su.dsv.proctoring.services;
 
 import java.time.Instant;
+import java.util.Optional;
 
 public interface ExaminationAdministrationService {
     record NewExamination(String name, Instant start, Instant end) {}
@@ -11,4 +12,6 @@ public interface ExaminationAdministrationService {
      * @return the scheduled examination
      */
     Exam scheduleNewExamination(NewExamination newExamination);
+
+    Optional<Exam> lookupExamination(String examinationId);
 }

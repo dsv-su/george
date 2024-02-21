@@ -5,6 +5,7 @@ import { useZorm } from 'react-zorm';
 import useI18n from '../hooks/i18n.ts';
 import { input } from '../components/input.tsx';
 import { Feedback, useFeedback } from '../components/feedback.tsx';
+import { useNavigate } from 'react-router-dom';
 
 const { POST } = createClient<paths>();
 type NewExaminationRequest = components['schemas']['NewExaminationRequest'];
@@ -27,6 +28,7 @@ export default function Administration() {
   });
   const i18n = useI18n();
   const feedback = useFeedback();
+  const navigate = useNavigate();
 
   const scheduleNewExamination = async (exam: NewExaminationRequest) => {
     const { data, error, response } = await POST('/api/administration/examination', {
@@ -41,6 +43,7 @@ export default function Administration() {
       }
     } else if (data) {
       feedback.success(i18n['Examination scheduled']);
+      navigate('/administration/examination/' + data.id);
     }
   };
 

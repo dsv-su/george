@@ -5,6 +5,7 @@ import Exam from './candidate/Exam.tsx';
 import Test from './Test.tsx';
 import Test2 from './Test2.tsx';
 import Administration from './administration/administration.tsx';
+import ExaminationPage from './administration/examinationPage.tsx';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path={'/test'} element={<Test />} />
         <Route path={'/test2'} element={<Test2 />} />
         <Route path={'/administration'} element={<Administration />} />
+        <Route path={'/administration/examination/:examinationId'} element={<ExaminationPage />} />
       </Routes>
     </BrowserRouter>
   );

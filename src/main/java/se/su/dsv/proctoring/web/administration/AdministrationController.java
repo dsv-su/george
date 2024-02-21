@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.ProblemDetail;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Optional;
 
 @RestController
 @ApiResponse(
@@ -52,11 +55,31 @@ public class AdministrationController {
                 toInstantInDefaultZone(newExaminationRequest.date(), newExaminationRequest.end())
         );
         Exam exam = examinationAdministrationService.scheduleNewExamination(newExamination);
-        ZonedDateTime zonedDateTime = exam.start().atZone(ZoneId.systemDefault());
+        return toExaminationDetails(exam);
+    }
+
+    /**
+     * Get details about a specific examination.
+     *
+     * @param examinationId the id of the examination
+     * @return the details about the examination
+     */
+    @GetMapping(value = "/examination/{examinationId}", consumes = "*/*")
+    @ApiResponse(
+            responseCode = "200",
+            description = "The examination was found.",
+            content = @Content(schema = @Schema(implementation = ExaminationDetails.class)))
+    public Optional<ExaminationDetails> getExaminationDetails(@PathVariable("examinationId") String examinationId) {
+        Optional<Exam> exam = examinationAdministrationService.lookupExamination(examinationId);
+        return exam.map(AdministrationController::toExaminationDetails);
+    }
+
+    private static ExaminationDetails toExaminationDetails(Exam e) {
+        ZonedDateTime zonedDateTime = e.start().atZone(ZoneId.systemDefault());
         LocalDate date = zonedDateTime.toLocalDate();
         LocalTime start = zonedDateTime.toLocalTime();
-        LocalTime end = exam.end().atZone(ZoneId.systemDefault()).toLocalTime();
-        return new ExaminationDetails(exam.id().asString(), exam.title(), date, start, end);
+        LocalTime end = e.end().atZone(ZoneId.systemDefault()).toLocalTime();
+        return new ExaminationDetails(e.id().asString(), e.title(), date, start, end);
     }
 
     private static Instant toInstantInDefaultZone(LocalDate date, LocalTime time) {

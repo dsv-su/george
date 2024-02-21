@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import javax.sql.DataSource;
 import java.security.Principal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class Services implements ExaminationAdministrationService, ProctoringService {
@@ -52,5 +53,23 @@ public class Services implements ExaminationAdministrationService, ProctoringSer
                 .param("end", newExamination.end())
                 .update();
         return new Exam(new ExamId(id.toString()), newExamination.name(), newExamination.start(), newExamination.end());
+    }
+
+    @Override
+    public Optional<Exam> lookupExamination(String examinationId) {
+        return jdbc.sql("""
+                SELECT *
+                FROM exams
+                WHERE id = :id
+                """)
+                .param("id", examinationId)
+                .query((rs, rowNum) -> {
+                    var id = new ExamId(rs.getString("id"));
+                    var name = rs.getString("name");
+                    var start = rs.getTimestamp("start").toInstant();
+                    var end = rs.getTimestamp("end").toInstant();
+                    return new Exam(id, name, start, end);
+                })
+                .optional();
     }
 }
