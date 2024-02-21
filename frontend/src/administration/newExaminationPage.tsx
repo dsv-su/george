@@ -19,7 +19,7 @@ const ExaminationSchema = z
   })
   .required();
 
-export default function Administration() {
+export default function NewExaminationPage() {
   const zo = useZorm('schedule_new_examination', ExaminationSchema, {
     onValidSubmit: async (e) => {
       e.preventDefault();
