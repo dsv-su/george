@@ -66,6 +66,9 @@ const ENGLISH = {
   'Back to list': 'Back to list',
   Administration: 'Administration',
   Examination: 'Examination',
+  Proctors: 'Proctors',
+  Add: 'Add',
+  'Add proctors': 'Add proctors',
 };
 
 const SWEDISH: typeof ENGLISH = {
@@ -110,6 +113,9 @@ const SWEDISH: typeof ENGLISH = {
   'Back to list': 'Tillbaka till listan',
   Administration: 'Administration',
   Examination: 'Examination',
+  Proctors: 'Tentavakter',
+  Add: 'Lägg till',
+  'Add proctors': 'Lägg till tentavakter',
 };
 
 type Language = 'en' | 'sv';

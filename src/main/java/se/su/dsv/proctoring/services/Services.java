@@ -82,4 +82,27 @@ public class Services implements ExaminationAdministrationService, ProctoringSer
         var end = rs.getTimestamp("end").toInstant();
         return new Exam(id, name, start, end);
     }
+
+    @Override
+    public List<Proctor> getProctors(ExamId examinationId) {
+        return jdbc.sql("""
+                SELECT *
+                FROM proctors
+                  INNER JOIN exam_proctor ON proctors.id = exam_proctor.proctor_id
+                WHERE exam_proctor.exam_id = :examId
+                """)
+                .param("examId", examinationId.asString())
+                .query((rs, rowNum) -> {
+                    var principalName = rs.getString("principal");
+                    return new Proctor(new Username(principalName));
+                })
+                .list();
+    }
+
+    private record Username(String principalName) implements Principal {
+        @Override
+        public String getName() {
+            return principalName;
+        }
+    }
 }

@@ -26,4 +26,11 @@ public interface ExaminationAdministrationService {
      * @return a list of all examinations
      */
     List<Exam> listExaminations();
+
+    /**
+     * Get all proctors for a specific examination.
+     * @param examinationId the id of the examination
+     * @return the proctors for the examination
+     */
+    List<Proctor> getProctors(ExamId examinationId);
 }

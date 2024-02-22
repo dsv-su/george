@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import se.su.dsv.proctoring.services.Exam;
+import se.su.dsv.proctoring.services.ExamId;
 import se.su.dsv.proctoring.services.ExaminationAdministrationService;
 
 import java.time.Instant;
@@ -102,5 +103,22 @@ public class AdministrationController {
 
     private static Instant toInstantInDefaultZone(LocalDate date, LocalTime time) {
         return time.atDate(date).atZone(ZoneId.systemDefault()).toInstant();
+    }
+
+    /**
+     * Get the proctors for a specific examination.
+     * @param examinationId the id of the examination
+     * @return the proctors for the examination
+     */
+    @GetMapping(value = "/examination/{examinationId}/proctors", consumes = "*/*")
+    @ApiResponse(
+            responseCode = "200",
+            description = "A valid examination id was provided.",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = Proctor.class))))
+    public List<Proctor> getProctors(@PathVariable("examinationId") String examinationId) {
+        return examinationAdministrationService.getProctors(new ExamId(examinationId))
+                .stream()
+                .map(proctor -> new Proctor(proctor.principal().getName()))
+                .toList();
     }
 }

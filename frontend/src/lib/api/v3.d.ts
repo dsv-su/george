@@ -37,6 +37,13 @@ export interface paths {
      */
     get: operations['getExaminationDetails'];
   };
+  '/api/administration/examination/{examinationId}/proctors': {
+    /**
+     * Get the proctors for a specific examination.
+     * @description Get the proctors for a specific examination.
+     */
+    get: operations['getProctors'];
+  };
 }
 
 export type webhooks = Record<string, never>;
@@ -96,6 +103,9 @@ export interface components {
       id: string;
       /** @description human-readable title that uniquely identifies this exam */
       title: string;
+    };
+    Proctor: {
+      principal?: string;
     };
   };
   responses: never;
@@ -212,6 +222,38 @@ export interface operations {
       200: {
         content: {
           'application/json': components['schemas']['ExaminationDetails'];
+        };
+      };
+      /** @description Something is wrong with the request, needs fixing before sending again. */
+      400: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description The request was fine, there was just a problem handling it. */
+      500: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+    };
+  };
+  /**
+   * Get the proctors for a specific examination.
+   * @description Get the proctors for a specific examination.
+   */
+  getProctors: {
+    parameters: {
+      path: {
+        /** @description the id of the examination */
+        examinationId: string;
+      };
+    };
+    responses: {
+      /** @description The proctors were found. */
+      200: {
+        content: {
+          'application/json': components['schemas']['Proctor'][];
         };
       };
       /** @description Something is wrong with the request, needs fixing before sending again. */
