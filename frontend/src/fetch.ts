@@ -42,7 +42,7 @@ const useFetch = <T>(request: () => Promise<{ data?: T; error?: unknown }>, deps
     void doFetch();
   }, [actualRequest]);
 
-  return { data, problem, error };
+  return { data, setData, problem, error };
 };
 
 export type { URI, ProblemDetail };

@@ -1,5 +1,8 @@
 package se.su.dsv.proctoring.services;
 
+import se.su.dsv.proctoring.common.SimplePrincipal;
+
+import java.security.Principal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -33,4 +36,11 @@ public interface ExaminationAdministrationService {
      * @return the proctors for the examination
      */
     List<Proctor> getProctors(ExamId examinationId);
+
+    /**
+     * Add a proctor to an examination.
+     * @param examId the id of the examination
+     * @param principal the principal of the proctor
+     */
+    void addProctor(ExamId examId, Principal principal);
 }

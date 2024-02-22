@@ -4,6 +4,18 @@
  */
 
 export interface paths {
+  '/api/administration/examination/{examinationId}/proctors': {
+    /**
+     * Get the proctors for a specific examination.
+     * @description Get the proctors for a specific examination.
+     */
+    get: operations['getProctors'];
+    /**
+     * Add a proctor to an examination.
+     * @description Add a proctor to an examination.
+     */
+    put: operations['addProctor'];
+  };
   '/api/administration/examination': {
     /**
      * Returns all the scheduled examinations.
@@ -37,19 +49,28 @@ export interface paths {
      */
     get: operations['getExaminationDetails'];
   };
-  '/api/administration/examination/{examinationId}/proctors': {
-    /**
-     * Get the proctors for a specific examination.
-     * @description Get the proctors for a specific examination.
-     */
-    get: operations['getProctors'];
-  };
 }
 
 export type webhooks = Record<string, never>;
 
 export interface components {
   schemas: {
+    Proctor: {
+      principal?: string;
+    };
+    ProblemDetail: {
+      /** Format: uri */
+      type?: string;
+      title?: string;
+      /** Format: int32 */
+      status?: number;
+      detail?: string;
+      /** Format: uri */
+      instance?: string;
+      properties?: {
+        [key: string]: Record<string, never>;
+      };
+    };
     NewExaminationRequest: {
       title: string;
       /** Format: date */
@@ -66,19 +87,6 @@ export interface components {
        * @example 14:00:00
        */
       end: string;
-    };
-    ProblemDetail: {
-      /** Format: uri */
-      type?: string;
-      title?: string;
-      /** Format: int32 */
-      status?: number;
-      detail?: string;
-      /** Format: uri */
-      instance?: string;
-      properties?: {
-        [key: string]: Record<string, never>;
-      };
     };
     ExaminationDetails: {
       id: string;
@@ -104,9 +112,6 @@ export interface components {
       /** @description human-readable title that uniquely identifies this exam */
       title: string;
     };
-    Proctor: {
-      principal?: string;
-    };
   };
   responses: never;
   parameters: never;
@@ -120,6 +125,74 @@ export type $defs = Record<string, never>;
 export type external = Record<string, never>;
 
 export interface operations {
+  /**
+   * Get the proctors for a specific examination.
+   * @description Get the proctors for a specific examination.
+   */
+  getProctors: {
+    parameters: {
+      path: {
+        /** @description the id of the examination */
+        examinationId: string;
+      };
+    };
+    responses: {
+      /** @description A valid examination id was provided. */
+      200: {
+        content: {
+          'application/json': components['schemas']['Proctor'][];
+        };
+      };
+      /** @description Something is wrong with the request, needs fixing before sending again. */
+      400: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description The request was fine, there was just a problem handling it. */
+      500: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+    };
+  };
+  /**
+   * Add a proctor to an examination.
+   * @description Add a proctor to an examination.
+   */
+  addProctor: {
+    parameters: {
+      path: {
+        /** @description the id of the examination */
+        examinationId: string;
+      };
+    };
+    /** @description the proctor to add */
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Proctor'];
+      };
+    };
+    responses: {
+      /** @description The proctor was successfully added to the examination. */
+      204: {
+        content: never;
+      };
+      /** @description Something is wrong with the request, needs fixing before sending again. */
+      400: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description The request was fine, there was just a problem handling it. */
+      500: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+    };
+  };
   /**
    * Returns all the scheduled examinations.
    * @description Returns all the scheduled examinations.
@@ -222,38 +295,6 @@ export interface operations {
       200: {
         content: {
           'application/json': components['schemas']['ExaminationDetails'];
-        };
-      };
-      /** @description Something is wrong with the request, needs fixing before sending again. */
-      400: {
-        content: {
-          'application/json': components['schemas']['ProblemDetail'];
-        };
-      };
-      /** @description The request was fine, there was just a problem handling it. */
-      500: {
-        content: {
-          'application/json': components['schemas']['ProblemDetail'];
-        };
-      };
-    };
-  };
-  /**
-   * Get the proctors for a specific examination.
-   * @description Get the proctors for a specific examination.
-   */
-  getProctors: {
-    parameters: {
-      path: {
-        /** @description the id of the examination */
-        examinationId: string;
-      };
-    };
-    responses: {
-      /** @description The proctors were found. */
-      200: {
-        content: {
-          'application/json': components['schemas']['Proctor'][];
         };
       };
       /** @description Something is wrong with the request, needs fixing before sending again. */

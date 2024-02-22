@@ -99,6 +99,17 @@ public class Services implements ExaminationAdministrationService, ProctoringSer
                 .list();
     }
 
+    @Override
+    public void addProctor(ExamId examId, Principal principal) {
+        jdbc.sql("""
+                INSERT INTO exam_proctor (exam_id, proctor_id)
+                VALUES (:examId, (SELECT id FROM proctors WHERE principal = :principal))
+                """)
+                .param("examId", examId.asString())
+                .param("principal", principal.getName())
+                .update();
+    }
+
     private record Username(String principalName) implements Principal {
         @Override
         public String getName() {
