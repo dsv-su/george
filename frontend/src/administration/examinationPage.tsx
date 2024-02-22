@@ -11,6 +11,7 @@ type ExaminationDetails = components['schemas']['ExaminationDetails'];
 export default function ExaminationPage() {
   const navigate = useNavigate();
   const { examinationId } = useParams();
+  const i18n = useI18n();
 
   if (!examinationId) {
     navigate('/administration');
@@ -24,7 +25,6 @@ export default function ExaminationPage() {
       }),
     [examinationId],
   );
-  const i18n = useI18n();
 
   return (
     <>
