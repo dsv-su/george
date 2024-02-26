@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +17,7 @@ import se.su.dsv.proctoring.services.Exam;
 import se.su.dsv.proctoring.services.ExamId;
 import se.su.dsv.proctoring.services.ExaminationAdministrationService;
 
+import java.security.Principal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -135,6 +135,7 @@ public class AdministrationController {
             responseCode = "204",
             description = "The proctor was successfully added to the examination.")
     public void addProctor(@PathVariable("examinationId") String examinationId, @RequestBody Proctor proctor) {
-        examinationAdministrationService.addProctor(new ExamId(examinationId), new SimplePrincipal(proctor.principalName()));
+        Principal proctorPrincipal = new SimplePrincipal(proctor.principalName());
+        examinationAdministrationService.addProctor(new ExamId(examinationId), proctorPrincipal);
     }
 }

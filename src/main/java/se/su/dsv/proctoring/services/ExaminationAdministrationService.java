@@ -1,7 +1,5 @@
 package se.su.dsv.proctoring.services;
 
-import se.su.dsv.proctoring.common.SimplePrincipal;
-
 import java.security.Principal;
 import java.time.Instant;
 import java.util.List;
