@@ -1,5 +1,5 @@
 import useI18n from '../hooks/i18n.ts';
-import { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useFetch } from '../fetch.ts';
 import { paths } from '../lib/api/v3';
 import createClient from 'openapi-fetch';
