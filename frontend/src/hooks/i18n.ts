@@ -1,5 +1,6 @@
 import { ZodIssue } from 'zod';
 import { createContext, useContext } from 'react';
+import { ProblemDetail } from '../fetch.ts';
 
 const ENGLISH = {
   Title() {
@@ -69,6 +70,9 @@ const ENGLISH = {
   Proctors: 'Proctors',
   Add: 'Add',
   'Add proctors': 'Add proctors',
+  'Failed to add proctor': (problem: ProblemDetail) => {
+    return problem.detail ?? 'Failed to add proctor';
+  },
 };
 
 const SWEDISH: typeof ENGLISH = {
@@ -116,6 +120,9 @@ const SWEDISH: typeof ENGLISH = {
   Proctors: 'Tentavakter',
   Add: 'Lägg till',
   'Add proctors': 'Lägg till tentavakter',
+  'Failed to add proctor': (problem: ProblemDetail) => {
+    return problem.detail ?? 'Kunde inte lägga till tentavakt';
+  },
 };
 
 type Language = 'en' | 'sv';
