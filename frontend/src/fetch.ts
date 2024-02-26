@@ -4,8 +4,8 @@ type URI = string;
 
 interface ProblemDetail {
   type: URI;
-  title: string;
-  status?: number;
+  title?: string;
+  status: number;
   detail?: string;
   instance?: URI;
 }
