@@ -102,6 +102,13 @@ public class Services implements ExaminationAdministrationService, ProctoringSer
     @Override
     public void addProctor(ExamId examId, Principal principal) {
         jdbc.sql("""
+                INSERT INTO proctors (principal)
+                VALUES (:principal)
+                ON DUPLICATE KEY UPDATE principal = principal
+                """)
+                .param("principal", principal.getName())
+                .update();
+        jdbc.sql("""
                 INSERT INTO exam_proctor (exam_id, proctor_id)
                 VALUES (:examId, (SELECT id FROM proctors WHERE principal = :principal))
                 """)
