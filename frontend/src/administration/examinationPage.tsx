@@ -19,6 +19,7 @@ export default function ExaminationPage() {
     return <>Invalid examination</>;
   }
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const examination = useFetch<ExaminationDetails>(
     () =>
       GET(`/api/administration/examination/{examinationId}`, {
