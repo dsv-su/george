@@ -2,6 +2,8 @@
 module se.su.dsv.george {
     requires java.sql;
 
+    requires jakarta.servlet;
+
     requires spring.boot;
     requires spring.boot.autoconfigure;
     requires spring.context;
