@@ -16,7 +16,11 @@ public class SinglePageApplicationController {
      */
     @RequestMapping({
             "/proctor/{examId}",
-            "/candidate/{examId}"
+            "/candidate/{examId}",
+            "/administration",
+            "/administration/examination",
+            "/administration/examination/new",
+            "/administration/examination/{examId}",
     })
     public String serveIndexHtml() {
         return "forward:/";
