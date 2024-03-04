@@ -7,13 +7,13 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
 import se.su.dsv.proctoring.services.Candidate;
+import se.su.dsv.proctoring.services.CandidateService;
 import se.su.dsv.proctoring.services.Exam;
 import se.su.dsv.proctoring.services.ExamId;
 import se.su.dsv.proctoring.services.PrincipalName;
 import se.su.dsv.proctoring.services.ProctoringService;
 
 import java.io.IOException;
-import java.security.Principal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -153,6 +153,12 @@ public class WebSocketsHandler {
     }
 
     public class CandidateHandler extends BufferingTextWebSocketHandler {
+        private final CandidateService candidateService;
+
+        public CandidateHandler(CandidateService candidateService) {
+            this.candidateService = candidateService;
+        }
+
         @Override
         public void afterConnectionEstablished(WebSocketSession session)
                 throws Exception
@@ -192,7 +198,7 @@ public class WebSocketsHandler {
             switch (inboundMessage) {
                 case CandidateMessage.Inbound.Joined(String examIdAsString) -> {
                     ExamId examId = new ExamId(examIdAsString);
-                    if (canTake(examId, session.getPrincipal())) {
+                    if (candidateService.canTake(examId, session.getPrincipal())) {
                         Collection<WebSocketSession> proctors =
                                 WebSocketsHandler.this.proctorsPerExam.getOrDefault(examId, List.of());
                         // TODO: get only the correct proctor
@@ -208,11 +214,6 @@ public class WebSocketsHandler {
                     }
                 }
             }
-        }
-
-        private boolean canTake(ExamId examId, Principal principal) {
-            // TODO: check if the exam is ongoing and if the principal is a candidate
-            return true;
         }
     }
 }

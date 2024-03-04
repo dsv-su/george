@@ -16,6 +16,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
+import se.su.dsv.proctoring.services.CandidateService;
 import se.su.dsv.proctoring.services.ProctoringService;
 import se.su.dsv.proctoring.services.Services;
 import se.su.dsv.proctoring.web.proctor.WebSocketsHandler;
@@ -79,10 +80,10 @@ public class SpringBootProctoringApplication {
     }
 
     @Bean
-    public WebSocketConfigurer proctorWS(WebSocketsHandler webSocketsHandler) {
+    public WebSocketConfigurer proctorWS(WebSocketsHandler webSocketsHandler, CandidateService candidateService) {
         return registry -> {
             registry.addHandler(webSocketsHandler.new ProctorHandler(), "/ws/proctor");
-            registry.addHandler(webSocketsHandler.new CandidateHandler(), "/ws/candidate");
+            registry.addHandler(webSocketsHandler.new CandidateHandler(candidateService), "/ws/candidate");
         };
     }
 
