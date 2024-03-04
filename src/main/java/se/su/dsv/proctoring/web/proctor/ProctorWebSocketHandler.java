@@ -91,7 +91,7 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
                             maybeExam.get(),
                             session.getPrincipal());
                     for (Candidate candidate : candidates) {
-                        sendJsonMessage(session, new Message.Candidate(candidate.username().principalName()));
+                        sendJsonMessage(session, new Message.Candidate(candidate.principal().getName()));
                     }
                     proctorsPerExam.putIfAbsent(examId, new ConcurrentLinkedQueue<>());
                     proctorsPerExam.get(examId).add(session);

@@ -1,4 +1,6 @@
 package se.su.dsv.proctoring.services;
 
-public record Candidate(PrincipalName username) {
+import java.security.Principal;
+
+public record Candidate(Principal principal) {
 }

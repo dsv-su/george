@@ -153,7 +153,7 @@ public class AdministrationController {
     public List<Candidate> getCandidates(@PathVariable("examinationId") String examinationId) {
         return examinationAdministrationService.getCandidates(new ExamId(examinationId))
                 .stream()
-                .map(candidate -> new Candidate(candidate.username().principalName()))
+                .map(candidate -> new Candidate(candidate.principal().getName()))
                 .toList();
     }
 

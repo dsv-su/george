@@ -127,7 +127,7 @@ public class Services implements ExaminationAdministrationService, ProctoringSer
                 .param("examId", examId.asString())
                 .query((rs, rowNum) -> {
                     var principalName = rs.getString("candidate_principal_name");
-                    return new Candidate(new PrincipalName(principalName));
+                    return new Candidate(new Username(principalName));
                 })
                 .list();
     }
