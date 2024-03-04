@@ -73,17 +73,18 @@ public class SpringBootProctoringApplication {
 
     @Bean
     public WebSocketsHandler proctorWebSocketHandler(
+            ObjectMapper objectMapper,
             ProctoringService proctoringService,
-            ObjectMapper objectMapper)
+            CandidateService candidateService)
     {
-        return new WebSocketsHandler(proctoringService, objectMapper);
+        return new WebSocketsHandler(objectMapper, proctoringService, candidateService);
     }
 
     @Bean
-    public WebSocketConfigurer proctorWS(WebSocketsHandler webSocketsHandler, CandidateService candidateService) {
+    public WebSocketConfigurer proctorWS(WebSocketsHandler webSocketsHandler) {
         return registry -> {
             registry.addHandler(webSocketsHandler.new ProctorHandler(), "/ws/proctor");
-            registry.addHandler(webSocketsHandler.new CandidateHandler(candidateService), "/ws/candidate");
+            registry.addHandler(webSocketsHandler.new CandidateHandler(), "/ws/candidate");
         };
     }
 

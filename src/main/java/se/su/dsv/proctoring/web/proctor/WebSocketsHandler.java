@@ -1,6 +1,6 @@
 package se.su.dsv.proctoring.web.proctor;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -27,6 +27,7 @@ public class WebSocketsHandler {
     private static final WebSocketMessage<?> INVALID_MESSAGE = new TextMessage("{\"type\":\"invalid_message\"}");
 
     private final ProctoringService proctoringService;
+    private final CandidateService candidateService;
     private final ObjectMapper objectMapper;
 
     private Map<ExamId, Collection<WebSocketSession>> proctorsPerExam = new ConcurrentHashMap<>();
@@ -37,12 +38,21 @@ public class WebSocketsHandler {
     private Map<UUID, RTCConnection> rtcConnections = new ConcurrentHashMap<>();
     record RTCConnection(WebSocketSession proctor, WebSocketSession candidate) { }
 
-    public WebSocketsHandler(final ProctoringService proctoringService, ObjectMapper objectMapper) {
-        this.proctoringService = proctoringService;
+    public WebSocketsHandler(
+            ObjectMapper objectMapper,
+            ProctoringService proctoringService,
+            CandidateService candidateService)
+    {
         this.objectMapper = objectMapper;
+        this.proctoringService = proctoringService;
+        this.candidateService = candidateService;
     }
 
-    public class ProctorHandler extends BufferingTextWebSocketHandler {
+    public class ProctorHandler extends JsonMessageWebSocketHandler<InboundMessage> {
+        public ProctorHandler() {
+            super(objectMapper, InboundMessage.class);
+        }
+
         @Override
         public void afterConnectionEstablished(final WebSocketSession session)
                 throws Exception
@@ -66,21 +76,15 @@ public class WebSocketsHandler {
         }
 
         @Override
-        protected void handleTextMessage(WebSocketSession session, TextMessage textMessage)
-                throws IOException
+        protected void onInvalidMessage(WebSocketSession session, JacksonException exception, TextMessage message)
+                throws Exception
         {
-            String payload = textMessage.getPayload();
-            System.out.println("\u001B[31m<<< " + payload + "\u001B[0m");
-            try {
-                InboundMessage inboundMessage = objectMapper.readValue(payload, InboundMessage.class);
-                handleInboundMessage(session, inboundMessage);
-            } catch (JsonProcessingException e) {
-                session.sendMessage(INVALID_MESSAGE);
-            }
+            session.sendMessage(INVALID_MESSAGE);
         }
 
-        private void handleInboundMessage(WebSocketSession session, InboundMessage inboundMessage)
-                throws IOException
+        @Override
+        protected void handleJsonMessage(WebSocketSession session, InboundMessage inboundMessage)
+                throws Exception
         {
             assert session.getPrincipal() != null; // type hint for IntelliJ
             switch (inboundMessage) {
@@ -122,41 +126,9 @@ public class WebSocketsHandler {
         }
     }
 
-    private void sendJsonMessage(WebSocketSession session, Message message)
-            throws IOException
-    {
-        if (session.isOpen()) {
-            String payload = objectMapper.writeValueAsString(message);
-            System.out.println("\u001B[34m>>> " + payload + "\u001B[0m");
-            session.sendMessage(new TextMessage(payload));
-        }
-    }
-
-    private void sendJsonMessage(WebSocketSession session, RTCMessage message)
-            throws IOException
-    {
-        if (session.isOpen()) {
-            String payload = objectMapper.writeValueAsString(message);
-            System.out.println("\u001B[34m>>> " + payload + "\u001B[0m");
-            session.sendMessage(new TextMessage(payload));
-        }
-    }
-
-    private void sendJsonMessage(WebSocketSession session, CandidateMessage.Outbound message)
-            throws IOException
-    {
-        if (session.isOpen()) {
-            String payload = objectMapper.writeValueAsString(message);
-            System.out.println("\u001B[34m>>> " + payload + "\u001B[0m");
-            session.sendMessage(new TextMessage(payload));
-        }
-    }
-
-    public class CandidateHandler extends BufferingTextWebSocketHandler {
-        private final CandidateService candidateService;
-
-        public CandidateHandler(CandidateService candidateService) {
-            this.candidateService = candidateService;
+    public class CandidateHandler extends JsonMessageWebSocketHandler<CandidateMessage.Inbound> {
+        public CandidateHandler() {
+            super(objectMapper, CandidateMessage.Inbound.class);
         }
 
         @Override
@@ -177,21 +149,14 @@ public class WebSocketsHandler {
         }
 
         @Override
-        protected void handleTextMessage(WebSocketSession session, TextMessage message)
+        protected void onInvalidMessage(WebSocketSession session, JacksonException exception, TextMessage message)
                 throws Exception
         {
-            String payload = message.getPayload();
-            System.out.println("\u001B[31m<<< " + payload + "\u001B[0m");
-            try {
-                CandidateMessage.Inbound inboundMessage
-                        = objectMapper.readValue(payload, CandidateMessage.Inbound.class);
-                handleInboundMessage(session, inboundMessage);
-            } catch (JsonProcessingException e) {
-                session.sendMessage(INVALID_MESSAGE);
-            }
+            session.sendMessage(INVALID_MESSAGE);
         }
 
-        private void handleInboundMessage(WebSocketSession session, CandidateMessage.Inbound inboundMessage)
+        @Override
+        protected void handleJsonMessage(WebSocketSession session, CandidateMessage.Inbound inboundMessage)
                 throws IOException
         {
             assert session.getPrincipal() != null; // type hint for IntelliJ, enforced on connection opened
