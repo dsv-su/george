@@ -22,7 +22,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
+public class WebSocketsHandler {
     private static final WebSocketMessage<?> ACCESS_DENIED = new TextMessage("{\"type\":\"access_denied\"}");
     private static final WebSocketMessage<?> INVALID_MESSAGE = new TextMessage("{\"type\":\"invalid_message\"}");
 
@@ -37,81 +37,86 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
     private Map<UUID, RTCConnection> rtcConnections = new ConcurrentHashMap<>();
     record RTCConnection(WebSocketSession proctor, WebSocketSession candidate) { }
 
-    public ProctorWebSocketHandler(final ProctoringService proctoringService, ObjectMapper objectMapper) {
+    public WebSocketsHandler(final ProctoringService proctoringService, ObjectMapper objectMapper) {
         this.proctoringService = proctoringService;
         this.objectMapper = objectMapper;
     }
 
-    @Override
-    public void afterConnectionEstablished(final WebSocketSession session) throws Exception {
-        if (session.getPrincipal() == null) {
-            // only authenticated users can open a websocket connection
-            session.close(CloseStatus.POLICY_VIOLATION);
-            return;
+    public class ProctorHandler extends BufferingTextWebSocketHandler {
+        @Override
+        public void afterConnectionEstablished(final WebSocketSession session)
+                throws Exception
+        {
+            if (session.getPrincipal() == null) {
+                // only authenticated users can open a websocket connection
+                session.close(CloseStatus.POLICY_VIOLATION);
+                return;
+            }
+            connectedProctors.put(new PrincipalName(session.getPrincipal().getName()), session);
         }
-        connectedProctors.put(new PrincipalName(session.getPrincipal().getName()), session);
-    }
 
-    @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        for (Collection<WebSocketSession> proctors : proctorsPerExam.values()) {
-            proctors.remove(session);
+        @Override
+        public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+            for (Collection<WebSocketSession> proctors : proctorsPerExam.values()) {
+                proctors.remove(session);
+            }
+            if (session.getPrincipal() != null) {
+                connectedProctors.remove(new PrincipalName(session.getPrincipal().getName()));
+            }
         }
-        if (session.getPrincipal() != null) {
-            connectedProctors.remove(new PrincipalName(session.getPrincipal().getName()));
-        }
-    }
 
-    @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage textMessage)
-            throws IOException
-    {
-        String payload = textMessage.getPayload();
-        System.out.println("\u001B[31m<<< " + payload + "\u001B[0m");
-        try {
-            InboundMessage inboundMessage = objectMapper.readValue(payload, InboundMessage.class);
-            handleInboundMessage(session, inboundMessage);
-        } catch (JsonProcessingException e) {
-            session.sendMessage(INVALID_MESSAGE);
+        @Override
+        protected void handleTextMessage(WebSocketSession session, TextMessage textMessage)
+                throws IOException
+        {
+            String payload = textMessage.getPayload();
+            System.out.println("\u001B[31m<<< " + payload + "\u001B[0m");
+            try {
+                InboundMessage inboundMessage = objectMapper.readValue(payload, InboundMessage.class);
+                handleInboundMessage(session, inboundMessage);
+            } catch (JsonProcessingException e) {
+                session.sendMessage(INVALID_MESSAGE);
+            }
         }
-    }
 
-    private void handleInboundMessage(WebSocketSession session, InboundMessage inboundMessage)
-            throws IOException
-    {
-        assert session.getPrincipal() != null; // type hint for IntelliJ
-        switch (inboundMessage) {
-            case InboundMessage.ProctorExamination(String examIdAsString) -> {
-                ExamId examId = new ExamId(examIdAsString);
-                Optional<Exam> maybeExam = proctoringService.getProctorableExam(examId, session.getPrincipal());
-                if (maybeExam.isPresent()) {
-                    Message message = new Message.ExamInfo(maybeExam.get().title());
-                    sendJsonMessage(session, message);
-                    List<Candidate> candidates = proctoringService.getCandidates(
-                            maybeExam.get(),
-                            session.getPrincipal());
-                    for (Candidate candidate : candidates) {
-                        sendJsonMessage(session, new Message.Candidate(candidate.principal().getName()));
+        private void handleInboundMessage(WebSocketSession session, InboundMessage inboundMessage)
+                throws IOException
+        {
+            assert session.getPrincipal() != null; // type hint for IntelliJ
+            switch (inboundMessage) {
+                case InboundMessage.ProctorExamination(String examIdAsString) -> {
+                    ExamId examId = new ExamId(examIdAsString);
+                    Optional<Exam> maybeExam = proctoringService.getProctorableExam(examId, session.getPrincipal());
+                    if (maybeExam.isPresent()) {
+                        Message message = new Message.ExamInfo(maybeExam.get().title());
+                        sendJsonMessage(session, message);
+                        List<Candidate> candidates = proctoringService.getCandidates(
+                                maybeExam.get(),
+                                session.getPrincipal());
+                        for (Candidate candidate : candidates) {
+                            sendJsonMessage(session, new Message.Candidate(candidate.principal().getName()));
+                        }
+                        proctorsPerExam.putIfAbsent(examId, new ConcurrentLinkedQueue<>());
+                        proctorsPerExam.get(examId).add(session);
                     }
-                    proctorsPerExam.putIfAbsent(examId, new ConcurrentLinkedQueue<>());
-                    proctorsPerExam.get(examId).add(session);
-                } else {
-                    session.sendMessage(ACCESS_DENIED);
+                    else {
+                        session.sendMessage(ACCESS_DENIED);
+                    }
                 }
-            }
-            case InboundMessage.ConnectCandidate(String principalName) -> {
-                WebSocketSession candidate = connectedCandidates.get(new PrincipalName(principalName));
-                if (candidate != null) {
-                    UUID connectionId = UUID.randomUUID();
-                    rtcConnections.put(connectionId, new RTCConnection(session, candidate));
-                    sendJsonMessage(session, new Message.ConnectionEstablished(connectionId, principalName));
-                    sendJsonMessage(candidate, new CandidateMessage.Outbound.ConnectionRequest(connectionId));
+                case InboundMessage.ConnectCandidate(String principalName) -> {
+                    WebSocketSession candidate = connectedCandidates.get(new PrincipalName(principalName));
+                    if (candidate != null) {
+                        UUID connectionId = UUID.randomUUID();
+                        rtcConnections.put(connectionId, new RTCConnection(session, candidate));
+                        sendJsonMessage(session, new Message.ConnectionEstablished(connectionId, principalName));
+                        sendJsonMessage(candidate, new CandidateMessage.Outbound.ConnectionRequest(connectionId));
+                    }
                 }
-            }
-            case RTCMessage rtcMessage -> {
-                RTCConnection rtcConnection = rtcConnections.get(rtcMessage.connectionId());
-                if (rtcConnection != null) {
-                    sendJsonMessage(rtcConnection.candidate(), rtcMessage);
+                case RTCMessage rtcMessage -> {
+                    RTCConnection rtcConnection = rtcConnections.get(rtcMessage.connectionId());
+                    if (rtcConnection != null) {
+                        sendJsonMessage(rtcConnection.candidate(), rtcMessage);
+                    }
                 }
             }
         }
@@ -189,7 +194,7 @@ public class ProctorWebSocketHandler extends BufferingTextWebSocketHandler {
                     ExamId examId = new ExamId(examIdAsString);
                     if (canTake(examId, session.getPrincipal())) {
                         Collection<WebSocketSession> proctors =
-                                ProctorWebSocketHandler.this.proctorsPerExam.getOrDefault(examId, List.of());
+                                WebSocketsHandler.this.proctorsPerExam.getOrDefault(examId, List.of());
                         // TODO: get only the correct proctor
                         for (WebSocketSession proctor : proctors) {
                             sendJsonMessage(proctor, new Message.CandidateJoined(session.getPrincipal().getName()));

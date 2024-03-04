@@ -18,7 +18,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import se.su.dsv.proctoring.services.ProctoringService;
 import se.su.dsv.proctoring.services.Services;
-import se.su.dsv.proctoring.web.proctor.ProctorWebSocketHandler;
+import se.su.dsv.proctoring.web.proctor.WebSocketsHandler;
 
 import javax.sql.DataSource;
 import java.time.LocalTime;
@@ -71,18 +71,18 @@ public class SpringBootProctoringApplication {
     }
 
     @Bean
-    public ProctorWebSocketHandler proctorWebSocketHandler(
+    public WebSocketsHandler proctorWebSocketHandler(
             ProctoringService proctoringService,
             ObjectMapper objectMapper)
     {
-        return new ProctorWebSocketHandler(proctoringService, objectMapper);
+        return new WebSocketsHandler(proctoringService, objectMapper);
     }
 
     @Bean
-    public WebSocketConfigurer proctorWS(ProctorWebSocketHandler proctorWebSocketHandler) {
+    public WebSocketConfigurer proctorWS(WebSocketsHandler webSocketsHandler) {
         return registry -> {
-            registry.addHandler(proctorWebSocketHandler, "/ws/proctor");
-            registry.addHandler(proctorWebSocketHandler.new CandidateHandler(), "/ws/candidate");
+            registry.addHandler(webSocketsHandler.new ProctorHandler(), "/ws/proctor");
+            registry.addHandler(webSocketsHandler.new CandidateHandler(), "/ws/candidate");
         };
     }
 
