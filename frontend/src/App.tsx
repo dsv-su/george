@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import Index from './Index.tsx';
 import Proctor from './Proctor.tsx';
 import Exam from './candidate/Exam.tsx';
@@ -17,9 +17,19 @@ function App() {
         <Route path={'/candidate/:examId'} element={<Exam />} />
         <Route path={'/test'} element={<Test />} />
         <Route path={'/test2'} element={<Test2 />} />
-        <Route path={'/administration/examination/new'} element={<NewExaminationPage />} />
-        <Route path={'/administration/examination'} element={<ExaminationListPage />} />
-        <Route path={'/administration/examination/:examinationId'} element={<ExaminationPage />} />
+        <Route
+          path={'/administration'}
+          element={
+            <div className="container-lg">
+              <Outlet />
+            </div>
+          }
+        >
+          <Route index element={<Navigate to={'examination'} />} />
+          <Route path={'examination/new'} element={<NewExaminationPage />} />
+          <Route path={'examination'} element={<ExaminationListPage />} />
+          <Route path={'examination/:examinationId'} element={<ExaminationPage />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
