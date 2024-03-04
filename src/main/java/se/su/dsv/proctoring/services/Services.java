@@ -115,6 +115,7 @@ public class Services implements ExaminationAdministrationService, ProctoringSer
                 .param("examId", examId.asString())
                 .param("principal", principal.getName())
                 .update();
+        assignCandidatesToProctors(examId);
     }
 
     @Override
@@ -142,12 +143,30 @@ public class Services implements ExaminationAdministrationService, ProctoringSer
                 .param("examId", examId.asString())
                 .param("candidate", candidate.getName())
                 .update();
+        assignCandidatesToProctors(examId);
     }
 
     private record Username(String principalName) implements Principal {
         @Override
         public String getName() {
             return principalName;
+        }
+    }
+
+    private void assignCandidatesToProctors(ExamId examId) {
+        List<Candidate> candidates = getCandidates(examId);
+        List<Proctor> proctors = getProctors(examId);
+        for (int i = 0; i < candidates.size(); i++) {
+            Proctor proctor = proctors.get(i % proctors.size());
+            Candidate candidate = candidates.get(i);
+            jdbc.sql("""
+                    UPDATE exam_candidates
+                    SET proctor_id = (SELECT id FROM proctors WHERE principal = :proctor)
+                    WHERE candidate_principal_name = :candidate
+                    """)
+                    .param("proctor", proctor.principal().getName())
+                    .param("candidate", candidate.principal().getName())
+                    .update();
         }
     }
 }
