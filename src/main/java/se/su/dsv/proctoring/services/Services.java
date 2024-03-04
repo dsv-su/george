@@ -117,6 +117,33 @@ public class Services implements ExaminationAdministrationService, ProctoringSer
                 .update();
     }
 
+    @Override
+    public List<Candidate> getCandidates(ExamId examId) {
+        return jdbc.sql("""
+                SELECT *
+                FROM exam_candidates
+                WHERE exam_id = :examId
+                """)
+                .param("examId", examId.asString())
+                .query((rs, rowNum) -> {
+                    var principalName = rs.getString("candidate_principal_name");
+                    return new Candidate(new PrincipalName(principalName));
+                })
+                .list();
+    }
+
+    @Override
+    public void addCandidate(ExamId examId, Principal candidate) {
+        jdbc.sql("""
+                INSERT INTO exam_candidates (exam_id, candidate_principal_name)
+                VALUES (:examId, :candidate)
+                ON DUPLICATE KEY UPDATE candidate_principal_name = candidate_principal_name
+                """)
+                .param("examId", examId.asString())
+                .param("candidate", candidate.getName())
+                .update();
+    }
+
     private record Username(String principalName) implements Principal {
         @Override
         public String getName() {

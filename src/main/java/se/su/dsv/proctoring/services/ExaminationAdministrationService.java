@@ -41,4 +41,18 @@ public interface ExaminationAdministrationService {
      * @param principal the principal of the proctor
      */
     void addProctor(ExamId examId, Principal principal);
+
+    /**
+     * Get all candidates for a specific examination.
+     * @param examId the id of the examination
+     * @return the candidates for the examination
+     */
+    List<Candidate> getCandidates(ExamId examId);
+
+    /**
+     * Add a candidate to an examination.
+     * @param examId the id of the examination
+     * @param candidate the principal of the candidate
+     */
+    void addCandidate(ExamId examId, Principal candidate);
 }

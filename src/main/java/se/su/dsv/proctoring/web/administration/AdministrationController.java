@@ -138,4 +138,36 @@ public class AdministrationController {
         Principal proctorPrincipal = new SimplePrincipal(proctor.principalName());
         examinationAdministrationService.addProctor(new ExamId(examinationId), proctorPrincipal);
     }
+
+    /**
+     * Get the candidates for a specific examination.
+     * @param examinationId the id of the examination
+     * @return the candidates for the examination
+     */
+    @GetMapping(value = "/examination/{examinationId}/candidates", consumes = "*/*")
+    @ApiResponse(
+            responseCode = "200",
+            description = "The examination was found.",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = Candidate.class)))
+    )
+    public List<Candidate> getCandidates(@PathVariable("examinationId") String examinationId) {
+        return examinationAdministrationService.getCandidates(new ExamId(examinationId))
+                .stream()
+                .map(candidate -> new Candidate(candidate.username().principalName()))
+                .toList();
+    }
+
+    /**
+     * Add a candidate to an examination.
+     * @param examinationId the id of the examination
+     * @param candidate the candidate to add
+     */
+    @PutMapping(value = "/examination/{examinationId}/candidates", consumes = "application/json")
+    @ApiResponse(
+            responseCode = "204",
+            description = "The candidate was successfully added to the examination.")
+    public void addCandidate(@PathVariable("examinationId") String examinationId, @RequestBody Candidate candidate) {
+        Principal candidatePrincipal = new SimplePrincipal(candidate.principalName());
+        examinationAdministrationService.addCandidate(new ExamId(examinationId), candidatePrincipal);
+    }
 }

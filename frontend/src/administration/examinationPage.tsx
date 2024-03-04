@@ -5,6 +5,7 @@ import createClient from 'openapi-fetch';
 import Fetch from '../components/Fetch.tsx';
 import useI18n from '../hooks/i18n.ts';
 import ManageExaminationProctors from './manageExaminationProctors.tsx';
+import ManageExaminationCandidates from './manageExaminationCandidates.tsx';
 
 const { GET } = createClient<paths>();
 type ExaminationDetails = components['schemas']['ExaminationDetails'];
@@ -66,6 +67,9 @@ export default function ExaminationPage() {
 
       <h2>{i18n['Proctors']}</h2>
       <ManageExaminationProctors examinationId={examinationId} />
+
+      <h2>{i18n['Candidates']}</h2>
+      <ManageExaminationCandidates examinationId={examinationId} />
     </>
   );
 }

@@ -73,6 +73,11 @@ const ENGLISH = {
   'Failed to add proctor': (problem: ProblemDetail) => {
     return problem.detail ?? 'Failed to add proctor';
   },
+  Candidates: 'Candidates',
+  'Add candidates': 'Add candidates',
+  'Failed to add candidate': (problem: ProblemDetail) => {
+    return problem.detail ?? 'Failed to add candidate';
+  },
 };
 
 const SWEDISH: typeof ENGLISH = {
@@ -122,6 +127,11 @@ const SWEDISH: typeof ENGLISH = {
   'Add proctors': 'Lägg till tentavakter',
   'Failed to add proctor': (problem: ProblemDetail) => {
     return problem.detail ?? 'Kunde inte lägga till tentavakt';
+  },
+  Candidates: 'Tentander',
+  'Add candidates': 'Lägg till tentander',
+  'Failed to add candidate': (problem: ProblemDetail) => {
+    return problem.detail ?? 'Kunde inte lägga till tentand';
   },
 };
 
