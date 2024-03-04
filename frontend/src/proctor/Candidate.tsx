@@ -5,6 +5,7 @@ import useProctorWebSocket, { InboundMessage } from '../hooks/useProctorWebSocke
 
 type CandidateProps = {
   candidate: string;
+  streamSize: number;
 };
 
 const Candidate = (props: CandidateProps) => {
@@ -42,12 +43,13 @@ const Candidate = (props: CandidateProps) => {
   return (
     <div className="candidate">
       <h1>{props.candidate}</h1>
-      <div className="media">{connectionId && <LiveView key={connectionId} id={connectionId} />}</div>
+      {!connectionId && <p>Not connected yet</p>}
+      <div className="media">{connectionId && <LiveView key={connectionId} id={connectionId} size={props.streamSize} />}</div>
     </div>
   );
 };
 
-function LiveView({ id }: { id: string }) {
+function LiveView({ id, size }: { id: string; size: number }) {
   const { connection } = useProctorRTC({ id });
   const [streams, setStreams] = useState<MediaStream[]>([]);
 
@@ -71,8 +73,9 @@ function LiveView({ id }: { id: string }) {
 
   return (
     <div>
+      {connection()?.connectionState}
       {streams.map((stream) => {
-        return <Video key={stream.id} stream={stream} />;
+        return <Video key={stream.id} stream={stream} size={size} />;
       })}
     </div>
   );

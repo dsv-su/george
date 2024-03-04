@@ -16,6 +16,7 @@ const Proctor = () => {
   });
   const [examInfo, setExamInfo] = useState<ExaminationInfo>();
   const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [streamSize, setStreamSize] = useState<number>(50);
 
   const onMessage = (message: InboundMessage) => {
     try {
@@ -47,6 +48,18 @@ const Proctor = () => {
       <div className="navbar bg-primary" data-bs-theme="dark">
         <div className="container-fluid">
           <a className="navbar-brand">{examInfo}</a>
+          <span className="ms-auto border rounded bg-white px-1">
+            <input
+              className="form-range"
+              type="range"
+              min={1}
+              max={100}
+              onChange={(e) => {
+                setStreamSize(e.target.valueAsNumber);
+              }}
+              defaultValue={streamSize}
+            />
+          </span>
           <span className="border rounded bg-white p-1">
             <WebSocketState readyState={readyState} />
           </span>
@@ -54,7 +67,7 @@ const Proctor = () => {
       </div>
       <div className="candidates">
         {candidates.map((candidate) => (
-          <Candidate key={candidate} candidate={candidate} />
+          <Candidate key={candidate} candidate={candidate} streamSize={streamSize} />
         ))}
       </div>
     </>

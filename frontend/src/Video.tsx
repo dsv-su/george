@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-export default function Video({ stream }: { stream: MediaStream }) {
+export default function Video({ stream, size }: { stream: MediaStream; size: number }) {
   const video = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -9,5 +9,7 @@ export default function Video({ stream }: { stream: MediaStream }) {
     }
   }, [stream]);
 
-  return <video ref={video} controls></video>;
+  const width = (1024 * size) / 100;
+
+  return <video ref={video} controls style={{ width: width + 'px' }}></video>;
 }
