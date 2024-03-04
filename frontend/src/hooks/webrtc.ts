@@ -49,13 +49,7 @@ export function useWebRTC(options: WebRTCOptions): WebRTCHook {
 
   useEffect(() => {
     const connection = new RTCPeerConnection({
-      iceServers: [
-        {
-          urls: 'turn:coturn-test.dsv.su.se:3478',
-          username: 'username1',
-          credential: 'password1',
-        },
-      ],
+      iceServers: [],
     });
     connectionRef.current = connection;
 
