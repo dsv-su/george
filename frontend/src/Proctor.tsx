@@ -44,9 +44,14 @@ const Proctor = () => {
 
   return (
     <>
-      {examId} ({examInfo})
-      <br />
-      {readyState}
+      <div className="navbar bg-primary" data-bs-theme="dark">
+        <div className="container-fluid">
+          <a className="navbar-brand">{examInfo}</a>
+          <span className="border rounded bg-white p-1">
+            <WebSocketState readyState={readyState} />
+          </span>
+        </div>
+      </div>
       <div className="candidates">
         {candidates.map((candidate) => (
           <Candidate key={candidate} candidate={candidate} />
@@ -55,5 +60,24 @@ const Proctor = () => {
     </>
   );
 };
+
+function WebSocketState({ readyState }: { readyState: ReadyState }) {
+  switch (readyState) {
+    case ReadyState.CONNECTING:
+      return <span className="text-info">Connecting ...</span>;
+    case ReadyState.OPEN:
+      return (
+        <span className="text-success btn-primary">
+          <span>◉</span> Connected
+        </span>
+      );
+    default:
+      return (
+        <span className="text-danger">
+          <span>◉</span> Disconnected
+        </span>
+      );
+  }
+}
 
 export default Proctor;
