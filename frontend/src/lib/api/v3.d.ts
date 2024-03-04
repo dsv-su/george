@@ -54,6 +54,13 @@ export interface paths {
      */
     get: operations['listExamsToProctor'];
   };
+  '/api/candidate/list': {
+    /**
+     * Returns the exams the given principal should take.
+     * @description Returns the exams the given principal should take.
+     */
+    get: operations['listExamsToTake'];
+  };
   '/api/administration/examination/{examinationId}': {
     /**
      * Get details about a specific examination.
@@ -131,6 +138,12 @@ export interface components {
       end: string;
     };
     Exam: {
+      /** @description unique identifier for this exam */
+      id: string;
+      /** @description human-readable title that uniquely identifies this exam */
+      title: string;
+    };
+    'candidate.Exam': {
       /** @description unique identifier for this exam */
       id: string;
       /** @description human-readable title that uniquely identifies this exam */
@@ -367,6 +380,32 @@ export interface operations {
       200: {
         content: {
           '*/*': components['schemas']['Exam'][];
+        };
+      };
+    };
+  };
+  /**
+   * Returns the exams the given principal should take.
+   * @description Returns the exams the given principal should take.
+   */
+  listExamsToTake: {
+    responses: {
+      /** @description The exams the given candidate should take. */
+      200: {
+        content: {
+          'application/json': components['schemas']['candidate.Exam'][];
+        };
+      };
+      /** @description Something is wrong with the request, needs fixing before sending again. */
+      400: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description The request was fine, there was just a problem handling it. */
+      500: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
         };
       };
     };

@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class Services implements ExaminationAdministrationService, ProctoringService {
+public class Services implements ExaminationAdministrationService, ProctoringService, CandidateService {
     private final JdbcClient jdbc;
 
     public Services(DataSource dataSource) {
@@ -144,6 +144,19 @@ public class Services implements ExaminationAdministrationService, ProctoringSer
                 .param("candidate", candidate.getName())
                 .update();
         assignCandidatesToProctors(examId);
+    }
+
+    @Override
+    public List<Exam> examsToTake(Principal candidate) {
+        return jdbc.sql("""
+                SELECT *
+                FROM exams
+                  INNER JOIN exam_candidates ON exams.id = exam_candidates.exam_id
+                WHERE exam_candidates.candidate_principal_name = :candidate
+                """)
+                .param("candidate", candidate.getName())
+                .query(Services::mapToExam)
+                .list();
     }
 
     private record Username(String principalName) implements Principal {
