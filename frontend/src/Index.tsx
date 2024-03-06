@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useFetch } from './fetch.ts';
-import { Exam } from './proctor.ts';
 import { Fetch } from './fetch-dom.ts';
 import { Link } from 'react-router-dom';
 import createClient from 'openapi-fetch';
-import { paths } from './lib/api/v3';
+import { components, paths } from './lib/api/v3';
 
 const { GET } = createClient<paths>();
+type Exam = components['schemas']['Exam'];
 
 function Index() {
   const [principal, setPrincipal] = useState<string>();
