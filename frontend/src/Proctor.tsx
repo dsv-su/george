@@ -43,12 +43,45 @@ const Proctor = () => {
     }
   }, [readyState, sendJsonMessage, examId]);
 
+  const [microphone, setMicrophone] = useState<MediaStreamTrack>();
+
+  useEffect(() => {
+    const clearMicrophone = () => {
+      setMicrophone(undefined);
+    };
+    if (microphone) {
+      microphone.addEventListener('ended', clearMicrophone);
+    }
+    return () => {
+      if (microphone) {
+        microphone.stop();
+        microphone.removeEventListener('ended', clearMicrophone);
+      }
+    };
+  }, [microphone]);
+
+  const connectMicrophone = async () => {
+    try {
+      const microphone = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const track = microphone.getAudioTracks()[0];
+      setMicrophone(track);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   return (
     <>
       <div className="navbar bg-primary" data-bs-theme="dark">
         <div className="container-fluid">
           <a className="navbar-brand">{examInfo}</a>
-          <span className="ms-auto border rounded bg-white px-1">
+          {!microphone?.enabled && (
+            <button className="btn btn-primary ms-auto me-3" onClick={connectMicrophone}>
+              Connect microphone
+            </button>
+          )}
+          {microphone?.enabled && <span className="ms-auto badge bg-success me-3">Microphone connected</span>}
+          <span className="border rounded bg-white px-1 me-3">
             <input
               className="form-range"
               type="range"
@@ -67,7 +100,7 @@ const Proctor = () => {
       </div>
       <div className="candidates">
         {candidates.map((candidate) => (
-          <Candidate key={candidate} candidate={candidate} streamSize={streamSize} />
+          <Candidate key={candidate} candidate={candidate} streamSize={streamSize} microphone={microphone} />
         ))}
       </div>
     </>

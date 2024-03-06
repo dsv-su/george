@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Video from '../Video.tsx';
 import useProctorRTC from '../hooks/useProctorRTC.ts';
 import useProctorWebSocket, { InboundMessage } from '../hooks/useProctorWebSocket.ts';
@@ -6,6 +6,7 @@ import useProctorWebSocket, { InboundMessage } from '../hooks/useProctorWebSocke
 type CandidateProps = {
   candidate: string;
   streamSize: number;
+  microphone?: MediaStreamTrack;
 };
 
 const Candidate = (props: CandidateProps) => {
@@ -44,14 +45,18 @@ const Candidate = (props: CandidateProps) => {
     <div className="candidate">
       <h1>{props.candidate}</h1>
       {!connectionId && <p>Not connected yet</p>}
-      <div className="media">{connectionId && <LiveView key={connectionId} id={connectionId} size={props.streamSize} />}</div>
+      <div className="media">
+        {connectionId && <LiveView key={connectionId} id={connectionId} size={props.streamSize} microphone={props.microphone} />}
+      </div>
     </div>
   );
 };
 
-function LiveView({ id, size }: { id: string; size: number }) {
+function LiveView({ id, size, microphone }: { id: string; size: number; microphone?: MediaStreamTrack }) {
   const { connection } = useProctorRTC({ id });
   const [streams, setStreams] = useState<MediaStream[]>([]);
+  const localMicrophone = useRef<RTCRtpSender>();
+  const globalMicrophone = useRef<RTCRtpSender>();
 
   useEffect(() => {
     const ontrack = (event: RTCTrackEvent) => {
@@ -71,6 +76,40 @@ function LiveView({ id, size }: { id: string; size: number }) {
     };
   }, [connection]);
 
+  useEffect(() => {
+    if (microphone) {
+      if (localMicrophone.current) {
+        debug('has microphone');
+        if (localMicrophone.current.track !== microphone) {
+          debug('replacing microphone');
+          const oldLocal = localMicrophone.current.track;
+          const oldGlobal = globalMicrophone.current?.track;
+          void localMicrophone.current.replaceTrack(microphone.clone()); // todo error handling
+          void globalMicrophone.current?.replaceTrack(microphone); // todo error handling
+          if (oldLocal) oldLocal.stop();
+          if (oldGlobal) oldGlobal.stop();
+        }
+      } else {
+        debug('adding microphone');
+        globalMicrophone.current = connection().addTrack(microphone);
+        localMicrophone.current = connection().addTrack(microphone.clone());
+      }
+    } else {
+      debug('removing microphone');
+      if (localMicrophone.current) {
+        connection().removeTrack(localMicrophone.current);
+        localMicrophone.current = undefined;
+      }
+      if (globalMicrophone.current) {
+        connection().removeTrack(globalMicrophone.current);
+        globalMicrophone.current = undefined;
+      }
+    }
+    return () => {
+      localMicrophone.current?.track?.stop();
+    };
+  }, [connection, microphone]);
+
   return (
     <div>
       {connection()?.connectionState}
@@ -79,6 +118,10 @@ function LiveView({ id, size }: { id: string; size: number }) {
       })}
     </div>
   );
+}
+
+function debug(message: string) {
+  console.log(message);
 }
 
 export default Candidate;
