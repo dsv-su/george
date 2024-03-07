@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Video from '../Video.tsx';
 import useProctorRTC from '../hooks/useProctorRTC.ts';
 import useProctorWebSocket, { InboundMessage } from '../hooks/useProctorWebSocket.ts';
@@ -52,10 +52,9 @@ const Candidate = (props: CandidateProps) => {
   );
 };
 
-function LiveView({ id, size, microphone }: { id: string; size: number; microphone: MediaStreamTrack }) {
+function LiveView({ id, size }: { id: string; size: number; microphone: MediaStreamTrack }) {
   const { connection } = useProctorRTC({ id });
   const [streams, setStreams] = useState<MediaStream[]>([]);
-  const globalMicrophone = useRef<RTCRtpSender>();
   const [connectionState, setConnectionState] = useState<RTCPeerConnectionState>('new');
 
   useEffect(() => {
@@ -85,14 +84,6 @@ function LiveView({ id, size, microphone }: { id: string; size: number; micropho
       connection().removeEventListener('track', ontrack);
     };
   }, [connection]);
-
-  useEffect(() => {
-    if (globalMicrophone.current) {
-      void globalMicrophone.current.replaceTrack(microphone);
-    } else {
-      globalMicrophone.current = connection().addTrack(microphone);
-    }
-  }, [connection, microphone]);
 
   return (
     <div>
