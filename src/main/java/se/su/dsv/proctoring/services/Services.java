@@ -77,6 +77,21 @@ public class Services implements ExaminationAdministrationService, ProctoringSer
     }
 
     @Override
+    public Exam updateExamination(final ExamId examId, final NewExamination newExamination) {
+        jdbc.sql("""
+                UPDATE exams
+                SET name = :name, start = :start, end = :end
+                WHERE id = :id
+                """)
+                .param("id", examId.asString())
+                .param("name", newExamination.name())
+                .param("start", newExamination.start())
+                .param("end", newExamination.end())
+                .update();
+        return new Exam(examId, newExamination.name(), newExamination.start(), newExamination.end());
+    }
+
+    @Override
     public List<Exam> listExaminations() {
         return jdbc.sql("""
                 SELECT *

@@ -23,6 +23,14 @@ public interface ExaminationAdministrationService {
     Optional<Exam> lookupExamination(String examinationId);
 
     /**
+     * Update an examination.
+     * @param examId the id of the examination
+     * @param newExamination the new details of the examination
+     * @return the updated examination
+     */
+    Exam updateExamination(ExamId examId, NewExamination newExamination);
+
+    /**
      * List all examinations.
      * @return a list of all examinations
      */

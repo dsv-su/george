@@ -67,6 +67,11 @@ export interface paths {
      * @description Get details about a specific examination.
      */
     get: operations['getExaminationDetails'];
+    /**
+     * Update an examination.
+     * @description Update an examination.
+     */
+    put: operations['updateExamination'];
   };
 }
 
@@ -146,7 +151,7 @@ export interface components {
     'candidate.Exam': {
       /** @description unique identifier for this exam */
       id: string;
-      /** @description human-readable title that uniquely identifies this exam */
+      /** @description human-readable title that uniquely identifies this exam on the date of the exam */
       title: string;
     };
   };
@@ -423,6 +428,44 @@ export interface operations {
     };
     responses: {
       /** @description The examination was found. */
+      200: {
+        content: {
+          'application/json': components['schemas']['ExaminationDetails'];
+        };
+      };
+      /** @description Something is wrong with the request, needs fixing before sending again. */
+      400: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description The request was fine, there was just a problem handling it. */
+      500: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+    };
+  };
+  /**
+   * Update an examination.
+   * @description Update an examination.
+   */
+  updateExamination: {
+    parameters: {
+      path: {
+        /** @description the id of the examination */
+        examinationId: string;
+      };
+    };
+    /** @description the new details of the examination */
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['NewExaminationRequest'];
+      };
+    };
+    responses: {
+      /** @description The examination was successfully updated. */
       200: {
         content: {
           'application/json': components['schemas']['ExaminationDetails'];
