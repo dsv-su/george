@@ -6,7 +6,7 @@ export default function useCandidateRTC({ id }: { id: string }) {
     switch (message.type) {
       case 'rtc_offer':
         if (message.id === id) {
-          void rtc.offerReceived(message.offer, false);
+          void rtc.offerReceived(message.offer, true);
         }
         break;
       case 'rtc_answer':

@@ -62,9 +62,16 @@ export function useWebRTC(options: WebRTCOptions): WebRTCHook {
     const onnegotiationneeded = async () => {
       try {
         makingOffer.current = true;
-        const offer = await connection.createOffer();
-        await connection.setLocalDescription(offer);
-        await options.sendOffer(offer);
+        await connection.setLocalDescription();
+        const description = connection.localDescription!;
+        switch (description.type) {
+          case 'offer':
+            await options.sendOffer(description);
+            break;
+          case 'answer':
+            await options.sendAnswer(description);
+            break;
+        }
       } finally {
         makingOffer.current = false;
       }
