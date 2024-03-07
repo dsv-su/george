@@ -11,5 +11,5 @@ export default function Video({ stream, size }: { stream: MediaStream; size: num
 
   const width = (1024 * size) / 100;
 
-  return <video ref={video} controls style={{ width: width + 'px' }}></video>;
+  return <video ref={video} controls autoPlay style={{ width: width + 'px' }}></video>;
 }
