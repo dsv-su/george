@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Video from '../Video.tsx';
 import useProctorRTC from '../hooks/useProctorRTC.ts';
 import useProctorWebSocket, { InboundMessage } from '../hooks/useProctorWebSocket.ts';
@@ -46,16 +46,53 @@ const Candidate = (props: CandidateProps) => {
       <h1>{props.candidate}</h1>
       {!connectionId && <p>Not connected yet</p>}
       <div className="media">
-        {connectionId && <LiveView key={connectionId} id={connectionId} size={props.streamSize} microphone={props.microphone} />}
+        {connectionId && (
+          <WithLocalMicrophone microphone={props.microphone}>
+            {(localMicrophone) => (
+              <LiveView
+                id={connectionId}
+                size={props.streamSize}
+                localMicrophoneTrack={localMicrophone}
+                globalMicrophoneTrack={props.microphone}
+              />
+            )}
+          </WithLocalMicrophone>
+        )}
       </div>
     </div>
   );
 };
 
-function LiveView({ id, size, microphone }: { id: string; size: number; microphone: MediaStreamTrack }) {
+function WithLocalMicrophone({
+  microphone,
+  children,
+}: {
+  microphone: MediaStreamTrack;
+  children: (microphone: MediaStreamTrack) => React.JSX.Element;
+}) {
+  const [localMicrophone, setLocalMicrophone] = useState<MediaStreamTrack>();
+  useEffect(() => {
+    if (localMicrophone) {
+      localMicrophone.stop();
+    }
+    setLocalMicrophone(microphone.clone());
+  }, [microphone]);
+
+  if (localMicrophone) return children(localMicrophone!);
+  else return 'Connecting microphone ...';
+}
+
+type LiveViewProps = {
+  id: string;
+  size: number;
+  localMicrophoneTrack: MediaStreamTrack;
+  globalMicrophoneTrack: MediaStreamTrack;
+};
+function LiveView({ id, size, localMicrophoneTrack, globalMicrophoneTrack }: LiveViewProps) {
   const { connection } = useProctorRTC({ id });
   const [streams, setStreams] = useState<MediaStream[]>([]);
-  const globalMicrophone = useRef<RTCRtpSender>();
+  useMicrophone(connection, globalMicrophoneTrack);
+  const localMicrophone = useMicrophone(connection, localMicrophoneTrack);
   const [connectionState, setConnectionState] = useState<RTCPeerConnectionState>('new');
 
   useEffect(() => {
@@ -86,22 +123,44 @@ function LiveView({ id, size, microphone }: { id: string; size: number; micropho
     };
   }, [connection]);
 
-  useEffect(() => {
-    if (globalMicrophone.current) {
-      void globalMicrophone.current.replaceTrack(microphone);
-    } else {
-      globalMicrophone.current = connection().addTrack(microphone);
-    }
-  }, [connection, microphone]);
-
   return (
     <div>
       <RTCConnectionState connectionState={connectionState} />
+      <div>
+        Local microphone: {localMicrophone.muted && 'muted'}
+        <button onClick={localMicrophone.muted ? localMicrophone.unmute : localMicrophone.mute}>Toggle mute</button>
+      </div>
       {streams.map((stream) => {
         return <Video key={stream.id} stream={stream} size={size} />;
       })}
     </div>
   );
+}
+
+function useMicrophone(connection: () => RTCPeerConnection, microphone: MediaStreamTrack) {
+  const senderRef = useRef<RTCRtpSender>();
+  const connectionRef = useRef(connection);
+  const [muted, setMuted] = useState<boolean>(!microphone.enabled);
+
+  useEffect(() => {
+    if (senderRef.current && connectionRef.current === connection) {
+      void senderRef.current.replaceTrack(microphone);
+    } else {
+      senderRef.current = connection().addTrack(microphone);
+    }
+  }, [connection, microphone]);
+
+  const mute = useCallback(() => {
+    microphone.enabled = false;
+    setMuted(true);
+  }, [microphone, setMuted]);
+
+  const unmute = useCallback(() => {
+    microphone.enabled = true;
+    setMuted(false);
+  }, [microphone, setMuted]);
+
+  return { muted, mute, unmute };
 }
 
 function RTCConnectionState({ connectionState }: { connectionState: RTCPeerConnectionState }) {
