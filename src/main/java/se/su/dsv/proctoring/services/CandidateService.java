@@ -1,7 +1,5 @@
 package se.su.dsv.proctoring.services;
 
-import se.su.dsv.proctoring.web.proctor.WebSocketsHandler;
-
 import java.security.Principal;
 import java.util.List;
 

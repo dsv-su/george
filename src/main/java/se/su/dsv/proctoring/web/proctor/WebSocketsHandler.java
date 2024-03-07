@@ -102,8 +102,7 @@ public class WebSocketsHandler {
                         }
                         proctorsPerExam.putIfAbsent(examId, new ConcurrentLinkedQueue<>());
                         proctorsPerExam.get(examId).add(session);
-                    }
-                    else {
+                    } else {
                         session.sendMessage(ACCESS_DENIED);
                     }
                 }

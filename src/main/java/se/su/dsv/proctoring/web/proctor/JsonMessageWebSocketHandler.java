@@ -42,12 +42,13 @@ public abstract class JsonMessageWebSocketHandler<Inbound> extends BufferingText
 
     protected abstract void handleJsonMessage(WebSocketSession session, Inbound message) throws Exception;
 
-    protected void sendJsonMessage(WebSocketSession session, Object message)
+    protected final void sendJsonMessage(WebSocketSession session, Object message)
             throws IOException
     {
         try {
-            if (session.isOpen())
+            if (session.isOpen()) {
                 session.sendMessage(new TextMessage(objectMapper.writeValueAsString(message)));
+            }
         } catch (JacksonException e) {
             throw new IOException(e);
         }
