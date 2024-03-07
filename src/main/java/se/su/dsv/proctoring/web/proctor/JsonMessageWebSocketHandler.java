@@ -46,7 +46,8 @@ public abstract class JsonMessageWebSocketHandler<Inbound> extends BufferingText
             throws IOException
     {
         try {
-            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(message)));
+            if (session.isOpen())
+                session.sendMessage(new TextMessage(objectMapper.writeValueAsString(message)));
         } catch (JacksonException e) {
             throw new IOException(e);
         }
