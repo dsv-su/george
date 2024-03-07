@@ -75,12 +75,12 @@ const Proctor = () => {
       <div className="navbar bg-primary" data-bs-theme="dark">
         <div className="container-fluid">
           <a className="navbar-brand">{examInfo}</a>
-          {!microphone?.enabled && (
+          {!microphone && (
             <button className="btn btn-primary ms-auto me-3" onClick={connectMicrophone}>
               Connect microphone
             </button>
           )}
-          {microphone?.enabled && <span className="ms-auto badge bg-success me-3">Microphone connected</span>}
+          {microphone && <span className="ms-auto badge bg-success me-3">Microphone connected</span>}
           <span className="border rounded bg-white px-1 me-3">
             <input
               className="form-range"
@@ -98,11 +98,13 @@ const Proctor = () => {
           </span>
         </div>
       </div>
-      <div className="candidates">
-        {candidates.map((candidate) => (
-          <Candidate key={candidate} candidate={candidate} streamSize={streamSize} microphone={microphone} />
-        ))}
-      </div>
+      {microphone && (
+        <div className="candidates">
+          {candidates.map((candidate) => (
+            <Candidate key={candidate} candidate={candidate} streamSize={streamSize} microphone={microphone} />
+          ))}
+        </div>
+      )}
     </>
   );
 };

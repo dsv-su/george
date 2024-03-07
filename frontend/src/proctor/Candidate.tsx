@@ -6,7 +6,7 @@ import useProctorWebSocket, { InboundMessage } from '../hooks/useProctorWebSocke
 type CandidateProps = {
   candidate: string;
   streamSize: number;
-  microphone?: MediaStreamTrack;
+  microphone: MediaStreamTrack;
 };
 
 const Candidate = (props: CandidateProps) => {
@@ -52,10 +52,9 @@ const Candidate = (props: CandidateProps) => {
   );
 };
 
-function LiveView({ id, size, microphone }: { id: string; size: number; microphone?: MediaStreamTrack }) {
+function LiveView({ id, size, microphone }: { id: string; size: number; microphone: MediaStreamTrack }) {
   const { connection } = useProctorRTC({ id });
   const [streams, setStreams] = useState<MediaStream[]>([]);
-  const localMicrophone = useRef<RTCRtpSender>();
   const globalMicrophone = useRef<RTCRtpSender>();
   const [connectionState, setConnectionState] = useState<RTCPeerConnectionState>('new');
 
@@ -88,37 +87,11 @@ function LiveView({ id, size, microphone }: { id: string; size: number; micropho
   }, [connection]);
 
   useEffect(() => {
-    if (microphone) {
-      if (localMicrophone.current) {
-        debug('has microphone');
-        if (localMicrophone.current.track !== microphone) {
-          debug('replacing microphone');
-          const oldLocal = localMicrophone.current.track;
-          const oldGlobal = globalMicrophone.current?.track;
-          void localMicrophone.current.replaceTrack(microphone.clone()); // todo error handling
-          void globalMicrophone.current?.replaceTrack(microphone); // todo error handling
-          if (oldLocal) oldLocal.stop();
-          if (oldGlobal) oldGlobal.stop();
-        }
-      } else {
-        debug('adding microphone');
-        globalMicrophone.current = connection().addTrack(microphone);
-        localMicrophone.current = connection().addTrack(microphone.clone());
-      }
+    if (globalMicrophone.current) {
+      void globalMicrophone.current.replaceTrack(microphone);
     } else {
-      debug('removing microphone');
-      if (localMicrophone.current) {
-        connection().removeTrack(localMicrophone.current);
-        localMicrophone.current = undefined;
-      }
-      if (globalMicrophone.current) {
-        connection().removeTrack(globalMicrophone.current);
-        globalMicrophone.current = undefined;
-      }
+      globalMicrophone.current = connection().addTrack(microphone);
     }
-    return () => {
-      localMicrophone.current?.track?.stop();
-    };
   }, [connection, microphone]);
 
   return (
@@ -133,10 +106,6 @@ function LiveView({ id, size, microphone }: { id: string; size: number; micropho
 
 function RTCConnectionState({ connectionState }: { connectionState: RTCPeerConnectionState }) {
   return <div>{connectionState}</div>;
-}
-
-function debug(message: string) {
-  console.log(message);
 }
 
 export default Candidate;
