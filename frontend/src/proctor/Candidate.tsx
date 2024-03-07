@@ -57,6 +57,17 @@ function LiveView({ id, size, microphone }: { id: string; size: number; micropho
   const [streams, setStreams] = useState<MediaStream[]>([]);
   const localMicrophone = useRef<RTCRtpSender>();
   const globalMicrophone = useRef<RTCRtpSender>();
+  const [connectionState, setConnectionState] = useState<RTCPeerConnectionState>('new');
+
+  useEffect(() => {
+    const onconnectionstatechange = () => {
+      setConnectionState(connection().connectionState);
+    };
+    connection().addEventListener('connectionstatechange', onconnectionstatechange);
+    return () => {
+      connection().removeEventListener('connectionstatechange', onconnectionstatechange);
+    };
+  }, [connection, connectionState]);
 
   useEffect(() => {
     const ontrack = (event: RTCTrackEvent) => {
@@ -112,12 +123,16 @@ function LiveView({ id, size, microphone }: { id: string; size: number; micropho
 
   return (
     <div>
-      {connection()?.connectionState}
+      <RTCConnectionState connectionState={connectionState} />
       {streams.map((stream) => {
         return <Video key={stream.id} stream={stream} size={size} />;
       })}
     </div>
   );
+}
+
+function RTCConnectionState({ connectionState }: { connectionState: RTCPeerConnectionState }) {
+  return <div>{connectionState}</div>;
 }
 
 function debug(message: string) {
