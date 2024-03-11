@@ -27,6 +27,10 @@ export function useWebRTC(options: WebRTCOptions): WebRTCHook {
   const offerReceived = async (offer: RTCSessionDescriptionInit, polite: boolean) => {
     const connection = connectionRef.current!;
     if (!polite && (makingOffer.current || connection.signalingState !== 'stable')) {
+      if (connection.signalingState === 'have-local-offer' && connection.pendingLocalDescription) {
+        // Maybe our initial offering was missed, resend it
+        await options.sendOffer(connection.pendingLocalDescription);
+      }
       return;
     }
     await connection.setRemoteDescription(offer);
