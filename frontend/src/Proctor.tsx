@@ -3,6 +3,7 @@ import { ReadyState } from 'react-use-websocket';
 import { useEffect, useState } from 'react';
 import Candidate from './proctor/Candidate';
 import useProctorWebSocket, { InboundMessage } from './hooks/useProctorWebSocket.ts';
+import { WebSocketState } from './components/WebSocketState.tsx';
 
 type ExaminationInfo = string;
 type Candidate = string;
@@ -108,24 +109,5 @@ const Proctor = () => {
     </>
   );
 };
-
-function WebSocketState({ readyState }: { readyState: ReadyState }) {
-  switch (readyState) {
-    case ReadyState.CONNECTING:
-      return <span className="text-info">Connecting ...</span>;
-    case ReadyState.OPEN:
-      return (
-        <span className="text-success btn-primary">
-          <span>◉</span> Connected
-        </span>
-      );
-    default:
-      return (
-        <span className="text-danger">
-          <span>◉</span> Disconnected
-        </span>
-      );
-  }
-}
 
 export default Proctor;
