@@ -42,12 +42,22 @@ public abstract class JsonMessageWebSocketHandler<Inbound> extends BufferingText
 
     protected abstract void handleJsonMessage(WebSocketSession session, Inbound message) throws Exception;
 
+    /**
+     * Sends a message serialized as JSON to the given session.
+     * <p>
+     * If the session is closed the message is silently discarded.
+     *
+     * @param session the session to send the message to
+     * @param message the message to send
+     * @see ObjectMapper#writeValueAsString(Object)
+     */
     protected void sendJsonMessage(WebSocketSession session, Object message)
             throws IOException
     {
         try {
-            if (session.isOpen())
+            if (session.isOpen()) {
                 session.sendMessage(new TextMessage(objectMapper.writeValueAsString(message)));
+            }
         } catch (JacksonException e) {
             throw new IOException(e);
         }
