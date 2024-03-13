@@ -6,14 +6,19 @@ import Fetch from '../components/Fetch.tsx';
 import useI18n from '../hooks/i18n.ts';
 import ManageExaminationProctors from './manageExaminationProctors.tsx';
 import ManageExaminationCandidates from './manageExaminationCandidates.tsx';
+import { useState } from 'react';
+import ExaminationDetailsForm from './examinationDetailsForm.tsx';
+import { Feedback, useFeedback } from '../components/feedback.tsx';
 
-const { GET } = createClient<paths>();
+const { GET, PUT } = createClient<paths>();
 type ExaminationDetails = components['schemas']['ExaminationDetails'];
 
 export default function ExaminationPage() {
   const navigate = useNavigate();
   const { examinationId } = useParams();
   const i18n = useI18n();
+  const [isEditing, setIsEditing] = useState(false);
+  const feedback = useFeedback();
 
   if (!examinationId) {
     navigate('/administration');
@@ -28,6 +33,30 @@ export default function ExaminationPage() {
       }),
     [examinationId],
   );
+
+  const updateExamination = async (data: components['schemas']['NewExaminationRequest']) => {
+    feedback.clear();
+    const {
+      data: updatedExamination,
+      error,
+      response,
+    } = await PUT(`/api/administration/examination/{examinationId}`, {
+      body: data,
+      params: { path: { examinationId } },
+    });
+
+    if (error) {
+      if (response.status === 400) {
+        feedback.error(i18n['Failed to update examination'](error.detail));
+      } else {
+        feedback.error(i18n['Internal server error']);
+      }
+    } else if (updatedExamination) {
+      feedback.success(i18n['Examination details updated']);
+      examination.setData(updatedExamination);
+      setIsEditing(false);
+    }
+  };
 
   return (
     <>
@@ -45,8 +74,24 @@ export default function ExaminationPage() {
       </nav>
       <Fetch response={examination}>
         {(data) => {
+          if (isEditing) {
+            return (
+              <>
+                <Feedback {...feedback.messages} />
+                <ExaminationDetailsForm onSubmit={updateExamination} examinationDetails={data}>
+                  <button type="submit" className="btn btn-primary">
+                    {i18n['Save changes']}
+                  </button>
+                  <button type="button" className="btn btn-link" onClick={() => setIsEditing(false)}>
+                    {i18n['Cancel']}
+                  </button>
+                </ExaminationDetailsForm>
+              </>
+            );
+          }
           return (
             <>
+              <Feedback {...feedback.messages} />
               <dl>
                 <dt>{i18n['Title']()}</dt>
                 <dd>{data.title}</dd>
@@ -60,6 +105,17 @@ export default function ExaminationPage() {
                 <dt>{i18n['End']()}</dt>
                 <dd>{data.end}</dd>
               </dl>
+
+              <button
+                type="button"
+                className="btn btn-link btn-sm"
+                onClick={() => {
+                  feedback.clear();
+                  setIsEditing(true);
+                }}
+              >
+                {i18n['Edit']}
+              </button>
             </>
           );
         }}

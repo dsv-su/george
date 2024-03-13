@@ -81,6 +81,30 @@ public class AdministrationController {
     }
 
     /**
+     * Update an examination.
+     * @param examinationId the id of the examination
+     * @param newExaminationRequest the new details of the examination
+     * @return the updated examination
+     */
+    @PutMapping(value = "/examination/{examinationId}", consumes = "application/json")
+    @ApiResponse(
+            responseCode = "200",
+            description = "The examination was successfully updated.",
+            content = @Content(schema = @Schema(implementation = ExaminationDetails.class)))
+    public ExaminationDetails updateExamination(
+            @PathVariable("examinationId") String examinationId,
+            @RequestBody NewExaminationRequest newExaminationRequest)
+    {
+        var newExamination = new ExaminationAdministrationService.NewExamination(
+                newExaminationRequest.title(),
+                toInstantInDefaultZone(newExaminationRequest.date(), newExaminationRequest.start()),
+                toInstantInDefaultZone(newExaminationRequest.date(), newExaminationRequest.end())
+        );
+        Exam exam = examinationAdministrationService.updateExamination(new ExamId(examinationId), newExamination);
+        return toExaminationDetails(exam);
+    }
+
+    /**
      * Returns all the scheduled examinations.
      * @return a list of all the scheduled examinations
      */

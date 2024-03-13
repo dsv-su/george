@@ -78,6 +78,16 @@ const ENGLISH = {
   'Failed to add candidate': (problem: ProblemDetail) => {
     return problem.detail ?? 'Failed to add candidate';
   },
+  'Save changes': 'Save changes',
+  Edit: 'Edit',
+  'Failed to update examination': (reason?: string) => {
+    if (reason) {
+      return 'Could not update examination: ' + reason;
+    } else {
+      return 'Could not update examination';
+    }
+  },
+  'Examination details updated': 'Examination details updated',
   Home: 'Home',
   Proctoring: 'Proctoring',
 };
@@ -134,6 +144,16 @@ const SWEDISH: typeof ENGLISH = {
   'Add candidates': 'Lägg till tentander',
   'Failed to add candidate': (problem: ProblemDetail) => {
     return problem.detail ?? 'Kunde inte lägga till tentand';
+  },
+  'Save changes': 'Spara ändringar',
+  Edit: 'Redigera',
+  'Examination details updated': 'Examinationen uppdaterad',
+  'Failed to update examination': (reason?: string) => {
+    if (reason) {
+      return 'Kunde inte uppdatera examinationen: ' + reason;
+    } else {
+      return 'Kunde inte uppdatera examinationen';
+    }
   },
   Home: 'Hem',
   Proctoring: 'Tentamensövervakning',

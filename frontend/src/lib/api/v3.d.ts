@@ -4,6 +4,18 @@
  */
 
 export interface paths {
+  '/api/administration/examination/{examinationId}': {
+    /**
+     * Get details about a specific examination.
+     * @description Get details about a specific examination.
+     */
+    get: operations['getExaminationDetails_1'];
+    /**
+     * Update an examination.
+     * @description Update an examination.
+     */
+    put: operations['updateExamination'];
+  };
   '/api/administration/examination/{examinationId}/proctors': {
     /**
      * Get the proctors for a specific examination.
@@ -68,21 +80,28 @@ export interface paths {
      */
     get: operations['listExamsToTake'];
   };
-  '/api/administration/examination/{examinationId}': {
-    /**
-     * Get details about a specific examination.
-     * @description Get details about a specific examination.
-     */
-    get: operations['getExaminationDetails_1'];
-  };
 }
 
 export type webhooks = Record<string, never>;
 
 export interface components {
   schemas: {
-    Proctor: {
-      principal: string;
+    NewExaminationRequest: {
+      title: string;
+      /** Format: date */
+      date: string;
+      /**
+       * Format: time
+       * @description ISO 8601 format
+       * @example 14:00:00
+       */
+      start: string;
+      /**
+       * Format: time
+       * @description ISO 8601 format
+       * @example 14:00:00
+       */
+      end: string;
     };
     ProblemDetail: {
       /**
@@ -106,26 +125,6 @@ export interface components {
       instance?: string;
       [key: string]: unknown;
     };
-    Candidate: {
-      principal: string;
-    };
-    NewExaminationRequest: {
-      title: string;
-      /** Format: date */
-      date: string;
-      /**
-       * Format: time
-       * @description ISO 8601 format
-       * @example 14:00:00
-       */
-      start: string;
-      /**
-       * Format: time
-       * @description ISO 8601 format
-       * @example 14:00:00
-       */
-      end: string;
-    };
     ExaminationDetails: {
       id: string;
       title: string;
@@ -143,6 +142,12 @@ export interface components {
        * @example 14:00:00
        */
       end: string;
+    };
+    Proctor: {
+      principal: string;
+    };
+    Candidate: {
+      principal: string;
     };
     Exam: {
       /** @description unique identifier for this exam */
@@ -174,6 +179,76 @@ export type $defs = Record<string, never>;
 export type external = Record<string, never>;
 
 export interface operations {
+  /**
+   * Get details about a specific examination.
+   * @description Get details about a specific examination.
+   */
+  getExaminationDetails_1: {
+    parameters: {
+      path: {
+        /** @description the id of the examination */
+        examinationId: string;
+      };
+    };
+    responses: {
+      /** @description The examination was found. */
+      200: {
+        content: {
+          'application/json': components['schemas']['ExaminationDetails'];
+        };
+      };
+      /** @description Something is wrong with the request, needs fixing before sending again. */
+      400: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description The request was fine, there was just a problem handling it. */
+      500: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+    };
+  };
+  /**
+   * Update an examination.
+   * @description Update an examination.
+   */
+  updateExamination: {
+    parameters: {
+      path: {
+        /** @description the id of the examination */
+        examinationId: string;
+      };
+    };
+    /** @description the new details of the examination */
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['NewExaminationRequest'];
+      };
+    };
+    responses: {
+      /** @description The examination was successfully updated. */
+      200: {
+        content: {
+          'application/json': components['schemas']['ExaminationDetails'];
+        };
+      };
+      /** @description Something is wrong with the request, needs fixing before sending again. */
+      400: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description The request was fine, there was just a problem handling it. */
+      500: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+    };
+  };
   /**
    * Get the proctors for a specific examination.
    * @description Get the proctors for a specific examination.
@@ -450,38 +525,6 @@ export interface operations {
       200: {
         content: {
           'application/json': components['schemas']['candidate.Exam'][];
-        };
-      };
-      /** @description Something is wrong with the request, needs fixing before sending again. */
-      400: {
-        content: {
-          'application/json': components['schemas']['ProblemDetail'];
-        };
-      };
-      /** @description The request was fine, there was just a problem handling it. */
-      500: {
-        content: {
-          'application/json': components['schemas']['ProblemDetail'];
-        };
-      };
-    };
-  };
-  /**
-   * Get details about a specific examination.
-   * @description Get details about a specific examination.
-   */
-  getExaminationDetails_1: {
-    parameters: {
-      path: {
-        /** @description the id of the examination */
-        examinationId: string;
-      };
-    };
-    responses: {
-      /** @description The examination was found. */
-      200: {
-        content: {
-          'application/json': components['schemas']['ExaminationDetails'];
         };
       };
       /** @description Something is wrong with the request, needs fixing before sending again. */
