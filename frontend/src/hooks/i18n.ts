@@ -78,6 +78,8 @@ const ENGLISH = {
   'Failed to add candidate': (problem: ProblemDetail) => {
     return problem.detail ?? 'Failed to add candidate';
   },
+  Home: 'Home',
+  Proctoring: 'Proctoring',
 };
 
 const SWEDISH: typeof ENGLISH = {
@@ -133,6 +135,8 @@ const SWEDISH: typeof ENGLISH = {
   'Failed to add candidate': (problem: ProblemDetail) => {
     return problem.detail ?? 'Kunde inte lägga till tentand';
   },
+  Home: 'Hem',
+  Proctoring: 'Tentamensövervakning',
 };
 
 type Language = 'en' | 'sv';

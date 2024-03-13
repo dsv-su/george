@@ -2,6 +2,7 @@ package se.su.dsv.proctoring.services;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Optional;
 
 public interface CandidateService {
     /**
@@ -23,4 +24,12 @@ public interface CandidateService {
                 .map(Exam::id)
                 .anyMatch(examId::equals);
     }
+
+    /**
+     * Returns the proctor for the given candidate in the given exam.
+     * @param examId the exam id
+     * @param principal the candidate
+     * @return the proctor for the given candidate in the given exam.
+     */
+    Optional<Proctor> getProctorForCandidate(ExamId examId, Principal principal);
 }

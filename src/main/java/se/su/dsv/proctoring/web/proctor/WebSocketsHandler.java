@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -73,6 +74,8 @@ public class WebSocketsHandler {
             if (session.getPrincipal() != null) {
                 connectedProctors.remove(new PrincipalName(session.getPrincipal().getName()));
             }
+            rtcConnections.values()
+                    .removeIf(rtcConnection -> rtcConnection.proctor().equals(session));
         }
 
         @Override
@@ -110,6 +113,14 @@ public class WebSocketsHandler {
                 case InboundMessage.ConnectCandidate(String principalName) -> {
                     WebSocketSession candidate = connectedCandidates.get(new PrincipalName(principalName));
                     if (candidate != null) {
+                        for (Map.Entry<UUID, RTCConnection> entry : rtcConnections.entrySet()) {
+                            RTCConnection rtcConnection = entry.getValue();
+                            if (Objects.equals(rtcConnection.proctor(), session)
+                                && Objects.equals(rtcConnection.candidate(), candidate))
+                            {
+                                return;
+                            }
+                        }
                         UUID connectionId = UUID.randomUUID();
                         rtcConnections.put(connectionId, new RTCConnection(session, candidate));
                         sendJsonMessage(session, new Message.ConnectionEstablished(connectionId, principalName));
@@ -139,6 +150,8 @@ public class WebSocketsHandler {
                 session.close(CloseStatus.POLICY_VIOLATION);
             }
             connectedCandidates.put(new PrincipalName(session.getPrincipal().getName()), session);
+            rtcConnections.values()
+                    .removeIf(rtcConnection -> rtcConnection.candidate().equals(session));
         }
 
         @Override
@@ -164,11 +177,14 @@ public class WebSocketsHandler {
                 case CandidateMessage.Inbound.Joined(String examIdAsString) -> {
                     ExamId examId = new ExamId(examIdAsString);
                     if (candidateService.canTake(examId, session.getPrincipal())) {
-                        Collection<WebSocketSession> proctors =
-                                WebSocketsHandler.this.proctorsPerExam.getOrDefault(examId, List.of());
-                        // TODO: get only the correct proctor
-                        for (WebSocketSession proctor : proctors) {
-                            sendJsonMessage(proctor, new Message.CandidateJoined(session.getPrincipal().getName()));
+                        Optional<WebSocketSession> proctorSession = candidateService.getProctorForCandidate(
+                                        examId,
+                                        session.getPrincipal())
+                                .map(proctor ->
+                                        connectedProctors.get(new PrincipalName(proctor.principal().getName())));
+                        if (proctorSession.isPresent()) {
+                            sendJsonMessage(proctorSession.get(),
+                                    new Message.CandidateJoined(session.getPrincipal().getName()));
                         }
                     }
                 }

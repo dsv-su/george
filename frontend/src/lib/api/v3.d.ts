@@ -54,6 +54,13 @@ export interface paths {
      */
     get: operations['listExamsToProctor'];
   };
+  '/api/proctor/examination/{examId}': {
+    /**
+     * Returns the details of the examination with the given id.
+     * @description Returns the details of the examination with the given id.
+     */
+    get: operations['getExaminationDetails'];
+  };
   '/api/candidate/list': {
     /**
      * Returns the exams the given principal should take.
@@ -66,7 +73,7 @@ export interface paths {
      * Get details about a specific examination.
      * @description Get details about a specific examination.
      */
-    get: operations['getExaminationDetails'];
+    get: operations['getExaminationDetails_1'];
   };
 }
 
@@ -143,10 +150,15 @@ export interface components {
       /** @description human-readable title that uniquely identifies this exam */
       title: string;
     };
+    'proctor.ExaminationDetails': {
+      id: string;
+      title: string;
+      candidates: components['schemas']['Candidate'][];
+    };
     'candidate.Exam': {
       /** @description unique identifier for this exam */
       id: string;
-      /** @description human-readable title that uniquely identifies this exam */
+      /** @description human-readable title that uniquely identifies this exam on the date of the exam */
       title: string;
     };
   };
@@ -376,10 +388,54 @@ export interface operations {
    */
   listExamsToProctor: {
     responses: {
-      /** @description the exams the given principal should proctor. */
+      /** @description The exams the given proctor should proctor. */
       200: {
         content: {
-          '*/*': components['schemas']['Exam'][];
+          'application/json': components['schemas']['Exam'][];
+        };
+      };
+      /** @description Something is wrong with the request, needs fixing before sending again. */
+      400: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description The request was fine, there was just a problem handling it. */
+      500: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+    };
+  };
+  /**
+   * Returns the details of the examination with the given id.
+   * @description Returns the details of the examination with the given id.
+   */
+  getExaminationDetails: {
+    parameters: {
+      path: {
+        /** @description the id of the examination */
+        examId: string;
+      };
+    };
+    responses: {
+      /** @description Returns the details of the examination with the given id. */
+      200: {
+        content: {
+          'application/json': components['schemas']['proctor.ExaminationDetails'];
+        };
+      };
+      /** @description Something is wrong with the request, needs fixing before sending again. */
+      400: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description The request was fine, there was just a problem handling it. */
+      500: {
+        content: {
+          'application/json': components['schemas']['ProblemDetail'];
         };
       };
     };
@@ -414,7 +470,7 @@ export interface operations {
    * Get details about a specific examination.
    * @description Get details about a specific examination.
    */
-  getExaminationDetails: {
+  getExaminationDetails_1: {
     parameters: {
       path: {
         /** @description the id of the examination */

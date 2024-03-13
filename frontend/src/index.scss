@@ -39,6 +39,9 @@
 .candidate {
   min-width: 600px;
 }
-video {
-  width: 300px;
+video:first-child {
+  width: 66%;
+}
+video:nth-child(2) {
+  width: 33%;
 }

@@ -172,6 +172,24 @@ public class Services implements ExaminationAdministrationService, ProctoringSer
                 .list();
     }
 
+    @Override
+    public Optional<Proctor> getProctorForCandidate(ExamId examId, Principal principal) {
+        return jdbc.sql("""
+                SELECT proctors.principal
+                FROM exam_candidates
+                    INNER JOIN proctors ON exam_candidates.proctor_id = proctors.id
+                WHERE exam_candidates.candidate_principal_name = :candidate
+                  AND exam_candidates.exam_id = :examId
+                """)
+                .param("candidate", principal.getName())
+                .param("examId", examId.asString())
+                .query((rs, rowNum) -> {
+                    var principalName = rs.getString("principal");
+                    return new Proctor(new Username(principalName));
+                })
+                .optional();
+    }
+
     private record Username(String principalName) implements Principal {
         @Override
         public String getName() {
