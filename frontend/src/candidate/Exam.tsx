@@ -16,6 +16,8 @@ const Exam = () => {
 
   const { examId } = useParams();
 
+  const [hasJoined, setHasJoined] = useState(false);
+
   async function onMessage(message: InboundMessage) {
     console.log(message);
     switch (message.type) {
@@ -48,6 +50,7 @@ const Exam = () => {
 
   const join = async () => {
     sendJsonMessage({ type: 'candidate_joined', exam_id: examId! });
+    setHasJoined(true);
   };
 
   return (
@@ -78,12 +81,25 @@ const Exam = () => {
               </button>
             </li>
           </ol>
+
+          {hasJoined && (
+            <>
+              {connections.length === 0 && (
+                <div className="alert alert-info">You have successfully joined the exam. Waiting for the proctor to let you in.</div>
+              )}
+              {connections.length > 0 && (
+                <>
+                  <div className="alert alert-success">You have successfully joined the exam.</div>
+                </>
+              )}
+            </>
+          )}
         </div>
         <div className="col">
           <h5>Camera preview</h5>
-          <video ref={userVideo} autoPlay={true} style={{ maxWidth: '1600px' }}></video>
+          <video ref={userVideo} autoPlay={true} style={{ maxWidth: '100%' }}></video>
           <h5>Screen preview</h5>
-          <video ref={displayVideo} autoPlay={true} style={{ maxWidth: '1600px' }}></video>
+          <video ref={displayVideo} autoPlay={true} style={{ maxWidth: '100%' }}></video>
           {userMedia &&
             displayMedia &&
             connections.map((id) => <Stream key={id} streamId={id} userMedia={userMedia} displayMedia={displayMedia} />)}
